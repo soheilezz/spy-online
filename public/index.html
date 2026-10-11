@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0e1540" />
+<title>جاسوس</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Vazirmatn:wght@400;500;700;800&display=swap" />
+<style>
+  :root { --ink:#0e1540; --night:#18235c; --night2:#212d6e; --chip:#2a3680; --red:#d4152f; --lamp:#f3d567; --teal:#4fc3d6; --text:#eceefa; --soft:#c6cbec; --muted:#b9c1ea; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--ink); color: var(--text); font-family: Vazirmatn, Tahoma, sans-serif; min-height: 100%; }
+  body { overflow-x: hidden; }
+  .beam { position: fixed; left: 50%; top: -10%; width: 140vh; height: 140vh; margin-left: -70vh; pointer-events: none; transform-origin: 50% 0;
+    background: conic-gradient(from 180deg at 50% 0%, transparent 0deg, transparent 165deg, rgba(243,213,103,.10) 175deg, rgba(243,213,103,.16) 180deg, rgba(243,213,103,.10) 185deg, transparent 195deg, transparent 360deg);
+    animation: sweep 26s ease-in-out infinite; }
+  @keyframes sweep { 0%,100% { transform: rotate(-28deg); } 50% { transform: rotate(28deg); } }
+  main { position: relative; max-width: 460px; margin: 0 auto; min-height: 100vh; min-height: 100dvh; padding: 32px 20px 40px; display: flex; flex-direction: column; }
+  .screen { flex: 1; display: flex; flex-direction: column; animation: rise .35s cubic-bezier(.2,.8,.2,1); }
+  @keyframes rise { from { opacity: 0; transform: translateY(18px); } }
+  .display { font-family: Lalezar, Vazirmatn, sans-serif; font-weight: 400; line-height: 1.05; margin: 0; }
+  .hero { font-size: clamp(84px, 27vw, 132px); color: var(--lamp); text-align: center; text-shadow: 0 6px 0 rgba(212,21,47,.9); margin-top: 16px; }
+  .tag { text-align: center; color: var(--soft); font-size: 18px; margin: 12px 0 0; }
+  .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .top .display { font-size: 30px; color: var(--lamp); }
+  .muted { color: var(--muted); font-size: 14px; }
+  .label { color: var(--muted); font-weight: 700; font-size: 16px; margin: 0 0 12px; display: flex; justify-content: space-between; align-items: baseline; }
+  .label span { font-weight: 400; font-size: 14px; }
+  .btn { width: 100%; border: 0; border-radius: 16px; padding: 16px 24px; font: 800 18px Vazirmatn, sans-serif; cursor: pointer; transition: transform .1s, background .2s, opacity .2s; }
+  .btn:active { transform: scale(.98); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .red { background: var(--red); color: #fff; } .lamp { background: var(--lamp); color: var(--ink); } .ghost { background: var(--night); color: var(--text); }
+  .link { background: none; border: 0; color: var(--muted); font: 700 14px Vazirmatn, sans-serif; cursor: pointer; padding: 8px; }
+  .link:hover { color: var(--text); }
+  .pulse { animation: pulse 1.8s ease-out infinite; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(212,21,47,.55); } 50% { box-shadow: 0 0 0 14px rgba(212,21,47,0); } }
+  .stack > * + * { margin-top: 12px; }
+  input.field { width: 100%; border: 0; outline: 0; background: var(--night); color: var(--text); border-radius: 16px; padding: 14px 16px; font: 500 17px Vazirmatn, sans-serif; }
+  input.field::placeholder { color: rgba(185,193,234,.7); }
+  input.field:focus, input.code:focus { box-shadow: 0 0 0 3px rgba(243,213,103,.45); }
+  input.code { width: 100%; border: 0; outline: 0; background: var(--night); color: var(--lamp); border-radius: 24px; padding: 14px; text-align: center; font: 400 56px Lalezar, sans-serif; letter-spacing: .2em; direction: ltr; }
+  input.code::placeholder { color: var(--chip); }
+  .or { display: flex; align-items: center; gap: 12px; color: var(--muted); font-weight: 700; font-size: 14px; margin: 28px 0; }
+  .or::before, .or::after { content: ""; height: 1px; flex: 1; background: var(--chip); }
+  .err { min-height: 24px; text-align: center; color: #ffc3c5; font-weight: 700; margin: 8px 0 0; }
+  .ticket { position: relative; overflow: hidden; border: 0; width: 100%; border-radius: 28px; background: var(--lamp); color: var(--ink); padding: 16px 24px 20px; text-align: center; cursor: pointer; font-family: Vazirmatn, sans-serif; }
+  .ticket::before, .ticket::after { content: ""; position: absolute; top: 50%; width: 32px; height: 32px; margin-top: -16px; border-radius: 50%; background: var(--ink); }
+  .ticket::before { right: -16px; } .ticket::after { left: -16px; }
+  .ticket .t1 { font-weight: 700; opacity: .7; margin: 0; font-size: 16px; } .ticket .t2 { font-size: clamp(64px, 20vw, 92px); letter-spacing: .08em; direction: ltr; line-height: 1; margin: 4px 0; } .ticket .t3 { font-weight: 700; opacity: .7; margin: 0; font-size: 14px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0; }
+  .chip { display: flex; align-items: center; gap: 8px; background: var(--night); border-radius: 999px; padding: 6px 16px 6px 6px; font-weight: 700; }
+  .chip.me { background: var(--lamp); color: var(--ink); } .chip.off { opacity: .45; }
+  .chip small { font-weight: 500; opacity: .7; font-size: 13px; }
+  .av { width: 30px; height: 30px; border-radius: 50%; background: var(--chip); color: var(--lamp); display: grid; place-items: center; font-weight: 800; flex-shrink: 0; font-size: 13px; }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill { border: 0; border-radius: 999px; padding: 8px 16px; font: 700 16px Vazirmatn, sans-serif; background: var(--night); color: var(--soft); cursor: pointer; }
+  .pill.on { background: var(--text); color: var(--ink); } .pill:disabled { cursor: default; }
+  .stepper { display: flex; justify-content: space-between; align-items: center; background: var(--night); border-radius: 16px; padding: 12px 16px; font-weight: 700; }
+  .stepper .ctl { display: flex; align-items: center; gap: 12px; }
+  .stepper button { width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--chip); color: var(--text); font-size: 20px; cursor: pointer; }
+  .stepper button:disabled { opacity: .3; cursor: default; }
+  .stepper b { min-width: 64px; text-align: center; color: var(--lamp); font-size: 18px; }
+  .clock { font-family: Lalezar, sans-serif; font-size: 72px; line-height: 1; text-align: center; direction: ltr; }
+  .clock.low { color: var(--red); }
+  .card { position: relative; width: 100%; aspect-ratio: 4/3; border: 0; padding: 0; border-radius: 28px; overflow: hidden; background: var(--night); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: pointer; font-family: Vazirmatn, sans-serif; }
+  .face { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 24px; }
+  .face.citizen { background: var(--lamp); color: var(--ink); } .face.spy { background: var(--red); color: #fff; }
+  .face p { margin: 0; font-weight: 700; opacity: .8; font-size: 16px; }
+  .face .display { font-size: 56px; opacity: 1; margin: 4px 0; }
+  .flap { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--night) repeating-linear-gradient(135deg, rgba(255,255,255,.035) 0 2px, transparent 2px 14px); transition: transform .35s cubic-bezier(.3,1.4,.5,1); color: var(--text); }
+  .card.open .flap { transform: translateY(-101%); }
+  .flap .stamp { position: absolute; right: 20px; top: 16px; font-size: 14px; font-weight: 700; color: var(--muted); }
+  .seal { width: 112px; height: 112px; border-radius: 50%; background: var(--red); display: grid; place-items: center; transform: rotate(-8deg); box-shadow: inset 0 -6px 0 rgba(0,0,0,.25), 0 8px 24px rgba(212,21,47,.35); position: relative; }
+  .seal::after { content: ""; position: absolute; inset: 8px; border-radius: 50%; border: 2px dashed rgba(255,255,255,.35); }
+  .flap .hint { margin: 20px 0 0; font-weight: 700; font-size: 18px; } .flap .hint2 { margin: 0; color: var(--muted); font-size: 14px; }
+  .row { display: flex; align-items: center; gap: 12px; background: var(--night); border-radius: 16px; padding: 12px 16px; }
+  .row b { color: var(--lamp); }
+  .pick { display: flex; width: 100%; align-items: center; gap: 12px; border: 0; border-radius: 16px; padding: 12px 16px; background: var(--night); color: var(--text); font: 700 18px Vazirmatn, sans-serif; cursor: pointer; text-align: start; }
+  .pick.on { background: var(--red); color: #fff; } .pick small { margin-inline-start: auto; font-size: 14px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .grid button { border: 0; border-radius: 12px; padding: 12px; background: var(--night); color: var(--text); font: 700 16px Vazirmatn, sans-serif; cursor: pointer; }
+  .grid button:hover { background: var(--red); }
+  .bar { height: 8px; border-radius: 99px; background: var(--night); overflow: hidden; } .bar i { display: block; height: 100%; background: var(--lamp); border-radius: 99px; transition: width .4s; }
+  .verdict { align-self: center; border: 5px solid; border-radius: 22px; padding: 12px 28px; transform: rotate(-7deg); animation: slam .5s cubic-bezier(.3,1.6,.5,1) .15s both; }
+  .verdict .display { font-size: 56px; }
+  @keyframes slam { from { transform: scale(2.4) rotate(-22deg); opacity: 0; } }
+  .v-spy { border-color: var(--red); color: var(--red); } .v-town { border-color: #1f8a9e; color: var(--teal); }
+  .box { border-radius: 24px; padding: 18px 24px; }
+  .score { display: flex; align-items: center; gap: 12px; background: var(--night); border-radius: 16px; padding: 10px 16px; font-weight: 700; }
+  .score .display { margin-inline-start: auto; color: var(--lamp); font-size: 24px; }
+  .grow { flex: 1; } .center { text-align: center; } .mt8 { margin-top: 32px; } .mt4 { margin-top: 16px; } .mt6 { margin-top: 24px; }
+  .banner { background: var(--night); border-radius: 999px; padding: 8px 16px; text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 16px; }
+  .blink { animation: blink 1.6s infinite; } @keyframes blink { 50% { opacity: .55; } }
+</style>
+</head>
+<body>
+<div class="beam" aria-hidden="true"></div>
+<main id="app"></main>
+<script>
+(() => {
+  const $app = document.getElementById("app");
+  const FA = "۰۱۲۳۴۵۶۷۸۹";
+  const fa = (v) => String(v).replace(/[0-9]/g, (d) => FA[d]);
+  const toLatin = (v) => v.replace(/[۰-۹]/g, (d) => FA.indexOf(d)).replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/\D/g, "").slice(0, 5);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const initial = (n) => esc((n || "?").trim().charAt(0));
+
+  let session = JSON.parse(localStorage.getItem("jasoos") || "null");
+  let S = null; // آخرین وضعیت از سرور
+  let es = null, skew = 0, holding = false, guessing = false, gateErr = "", copied = false, connected = false;
+  const params = new URLSearchParams(location.search);
+
+  const save = (s) => { session = s; s ? localStorage.setItem("jasoos", JSON.stringify(s)) : localStorage.removeItem("jasoos"); };
+
+  async function post(url, body) {
+    const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || "خطا");
+    return j;
+  }
+  const act = (type, extra = {}) => post("/api/action", { ...session, type, ...extra }).catch(() => {});
+
+  function connect() {
+    if (es) es.close();
+    const q = new URLSearchParams(session).toString();
+    es = new EventSource("/api/events?" + q);
+    es.onopen = () => { connected = true; };
+    es.onmessage = (e) => {
+      const next = JSON.parse(e.data);
+      skew = next.now - Date.now();
+      if (S && S.game.phase !== next.game.phase) guessing = false;
+      S = next; connected = true; render();
+    };
+    es.onerror = async () => {
+      connected = false; render();
+      // اگه اتاق دیگه وجود نداره، برگرد به صفحه اول
+      const r = await fetch("/api/events?" + q, { method: "HEAD" }).catch(() => null);
+      if (r && r.status === 403) { es.close(); es = null; save(null); S = null; render(); }
+    };
+  }
+
+  /* ---------- screens ---------- */
+
+  function gate() {
+    const preCode = toLatin(params.get("room") || "");
+    const name = esc(localStorage.getItem("jasoos-name") || "");
+    return `<div class="screen">
+      <h1 class="display hero">جاسوس</h1>
+      <p class="tag">همه یه کلمه رو می‌دونن. جز یه نفر.</p>
+      <div class="mt8"><input id="name" class="field" maxlength="20" placeholder="اسمت چیه؟" value="${name}" aria-label="اسم" /></div>
+      <div class="mt4"><button class="btn red pulse" data-do="create">ساخت اتاق جدید</button></div>
+      <div class="or">یا با کد وارد شو</div>
+      <form id="joinForm" class="stack">
+        <input id="code" class="code" inputmode="numeric" autocomplete="off" placeholder="۰۰۰۰۰" value="${fa(preCode)}" aria-label="کد اتاق" />
+        <button class="btn lamp" type="submit">ورود به اتاق</button>
+      </form>
+      <p class="err" role="alert">${esc(gateErr)}</p>
+    </div>`;
+  }
+
+  const top = (right) => `<div class="top"><span class="display">جاسوس</span><span class="muted">${right}</span></div>`;
+  const nameOf = (id) => (S.players.find((p) => p.id === id) || {}).name || "ناشناس";
+  const av = (n) => `<span class="av">${initial(n)}</span>`;
+
+  function lobby() {
+    const isHost = S.host === S.me.id;
+    const online = S.players.filter((p) => p.online);
+    const enough = online.length >= 3;
+    const st = S.settings;
+    const cats = [...Object.entries(S.categories), ["mixed", "قاطی"]];
+    const board = Object.entries(S.scores).filter(([id]) => S.players.some((p) => p.id === id)).sort((a, b) => b[1] - a[1]);
+    return `<div class="screen">
+      <div class="top"><span class="display">جاسوس</span><button class="link" data-do="leave">خروج از اتاق</button></div>
+      <button class="ticket" data-do="copy" aria-label="کپی لینک اتاق">
+        <p class="t1">کد اتاق</p><p class="display t2">${fa(S.code)}</p>
+        <p class="t3">${copied ? "لینک کپی شد!" : "بزن تا لینک دعوت کپی بشه"}</p>
+      </button>
+      <section class="mt8">
+        <p class="label">سر میز <span>${enough ? fa(online.length) + " نفر" : "حداقل ۳ نفر لازمه"}</span></p>
+        <ul class="chips">${S.players.map((p) => `<li class="chip ${p.id === S.me.id ? "me" : ""} ${p.online ? "" : "off"}">${av(p.name)}${esc(p.name)}${p.id === S.host ? " <small>میزبان</small>" : ""}</li>`).join("")}</ul>
+      </section>
+      <section class="mt8 stack">
+        <p class="label" style="margin:0">کلمه‌ها از ${isHost ? "" : "<span>(میزبان انتخاب می‌کنه)</span>"}</p>
+        <div class="pills">${cats.map(([k, l]) => `<button class="pill ${st.cat === k ? "on" : ""}" ${isHost ? `data-do="cat" data-v="${k}"` : "disabled"}>${esc(l)}</button>`).join("")}</div>
+        <div class="stepper"><span>زمان هر دور</span><div class="ctl"><button ${isHost && st.minutes < 12 ? "" : "disabled"} data-do="min" data-v="1" aria-label="زیاد کن">+</button><b>${fa(st.minutes)} دقیقه</b><button ${isHost && st.minutes > 2 ? "" : "disabled"} data-do="min" data-v="-1" aria-label="کم کن">−</button></div></div>
+        <div class="stepper"><span>تعداد جاسوس${st.spyCount === 2 && online.length < 6 ? '<br><small class="muted">دو جاسوس از ۶ نفر به بالا</small>' : ""}</span><div class="ctl"><button ${isHost && st.spyCount < 2 ? "" : "disabled"} data-do="spy" data-v="1" aria-label="زیاد کن">+</button><b>${fa(st.spyCount)}</b><button ${isHost && st.spyCount > 1 ? "" : "disabled"} data-do="spy" data-v="-1" aria-label="کم کن">−</button></div></div>
+      </section>
+      <div class="mt8">
+        ${isHost ? `<button class="btn red ${enough ? "pulse" : ""}" data-do="start" ${enough ? "" : "disabled"}>شروع دور ${fa(S.game.round + 1)}</button>`
+                 : `<p class="center muted blink" style="font-size:16px">منتظر میزبان (${esc(nameOf(S.host))}) که دور رو شروع کنه…</p>`}
+      </div>
+      ${board.length ? `<section class="mt8"><p class="label">امتیازها ${isHost ? '<button class="link" data-do="reset">صفر کن</button>' : ""}</p>
+        <div class="stack">${board.map(([id, pts]) => `<div class="score">${av(nameOf(id))}${esc(nameOf(id))}<span class="display">${fa(pts)}</span></div>`).join("")}</div>
+        <p class="muted">شهروند برنده: ۱ امتیاز · جاسوس برنده: ۲ امتیاز</p></section>` : ""}
+    </div>`;
+  }
+
+  function clockText() {
+    const left = Math.max(0, S.game.endsAt - (Date.now() + skew));
+    const m = Math.floor(left / 60000), s = Math.floor((left % 60000) / 1000);
+    return { text: fa(String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0")), low: left < 30000, over: left === 0 };
+  }
+
+  function card() {
+    const g = S.game, cat = S.categories[g.cat];
+    const face = g.amSpy
+      ? `<div class="face spy"><p>نقش تو</p><span class="display">جاسوسی!</span><p>دسته: ${esc(cat)}. لو نرو.</p></div>`
+      : `<div class="face citizen"><p>${esc(cat)}</p><span class="display" style="font-size:${g.word.length > 9 ? 44 : 56}px">${esc(g.word)}</span><p>تو شهروندی</p></div>`;
+    return `<button class="card ${holding ? "open" : ""}" id="card" aria-label="نگه دار تا نقشت رو ببینی">${face}
+      <div class="flap"><span class="stamp">پرونده محرمانه</span>
+        <span class="seal"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/><path d="M2 12a10 10 0 0 1 18-6"/><path d="M2 16h.01"/><path d="M21.8 16c.2-2 .131-5.354 0-6"/><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/><path d="M8.65 22c.21-.66.45-1.32.57-2"/><path d="M9 6.8a6 6 0 0 1 9 5.2v2"/></svg></span>
+        <p class="hint">انگشتت رو نگه دار</p><p class="hint2">ول کنی، بسته می‌شه</p></div></button>`;
+  }
+
+  function wordGrid(title, sub) {
+    return `<div class="screen">${top(`<span id="clk"></span>`)}
+      <h2 class="display" style="font-size:40px;color:var(--red)">${title}</h2>
+      <p class="tag" style="text-align:start;margin:4px 0 20px;font-size:16px">${sub}</p>
+      <div class="grid">${S.game.guessWords.map((w) => `<button data-do="guess" data-v="${esc(w)}">${esc(w)}</button>`).join("")}</div>
+      ${S.game.phase === "play" ? '<button class="link mt4" style="width:100%" data-do="noguess">بی‌خیال</button>' : ""}
+    </div>`;
+  }
+
+  function play() {
+    const g = S.game;
+    if (guessing && g.amSpy) return wordGrid("کلمه چیه؟", "یه شانس داری. درست بگی می‌بری، غلط بگی شهر می‌بره.");
+    const c = clockText();
+    const meFirst = g.starter === S.me.id;
+    return `<div class="screen">${top("دور " + fa(g.round))}
+      <div class="center" style="margin-bottom:24px"><div id="clk" class="clock ${c.low ? "low" : ""}">${c.text}</div><p class="muted" id="clkNote">${c.over ? "وقت تموم شد. بریم سراغ رأی." : "تا رأی‌گیری"}</p></div>
+      ${card()}
+      <div class="row mt6">${av(nameOf(g.starter))}<span>اول <b>${meFirst ? "تو" : esc(nameOf(g.starter))}</b> از یکی سؤال ${meFirst ? "کن" : "کنه"}.</span></div>
+      <ul class="chips mt4">${g.roster.map((id) => `<li class="chip" style="font-size:14px">${av(nameOf(id))}${esc(nameOf(id))}</li>`).join("")}</ul>
+      <div class="grow"></div>
+      <div class="stack mt8">
+        <button class="btn red ${c.over ? "pulse" : ""}" data-do="toVote">بریم رأی‌گیری</button>
+        ${g.amSpy ? '<button class="btn ghost" data-do="wantGuess">فهمیدم کلمه چیه</button>' : ""}
+        ${S.host === S.me.id ? '<button class="link" style="width:100%" data-do="cancel">لغو این دور</button>' : ""}
+      </div></div>`;
+  }
+
+  function vote() {
+    const g = S.game;
+    return `<div class="screen">${top("دور " + fa(g.round))}
+      <h2 class="display" style="font-size:48px">جاسوس کیه؟</h2>
+      <p class="tag" style="text-align:start;margin-top:4px;font-size:16px">رأی‌ها مخفیه تا همه رأی بدن. تساوی یعنی جاسوس قسر در رفت.</p>
+      <div class="stack mt6">${g.roster.filter((id) => id !== S.me.id).map((id) => `<button class="pick ${g.myVote === id ? "on" : ""}" data-do="vote" data-v="${id}">${av(nameOf(id))}${esc(nameOf(id))}${g.myVote === id ? "<small>رأی تو</small>" : ""}</button>`).join("")}</div>
+      <div class="grow"></div>
+      <div class="mt8"><p class="muted" style="display:flex;justify-content:space-between"><span>${g.myVote ? "رأیت ثبت شد. می‌تونی عوضش کنی." : "یکی رو انتخاب کن"}</span><span>${fa(g.votedCount)} از ${fa(g.voterCount)} رأی دادن</span></p>
+        <div class="bar"><i style="width:${(g.votedCount / Math.max(1, g.voterCount)) * 100}%"></i></div>
+        ${g.votedCount > 0 && g.votedCount < g.voterCount ? '<button class="link mt4" style="width:100%" data-do="countNow">منتظر نمون، همین الان بشمر</button>' : ""}</div>
+    </div>`;
+  }
+
+  function last() {
+    const g = S.game;
+    if (g.accused === S.me.id) return wordGrid("گیر افتادی.", "ولی هنوز یه راه داری: کلمه رو درست حدس بزن، می‌بری.");
+    return `<div class="screen" style="justify-content:center;text-align:center">
+      <p class="display blink" style="font-size:60px;color:var(--lamp)">${esc(nameOf(g.accused))}</p>
+      <p style="font-size:18px">جاسوس بود! داره آخرین حدسش رو می‌زنه…</p>
+      <p class="muted" style="font-size:16px">اگه کلمه رو بگه، باز هم می‌بره.</p></div>`;
+  }
+
+  function result() {
+    const g = S.game, spyWon = g.outcome === "spy", iWon = spyWon === g.amSpy;
+    const why = { tie: "رأی‌ها مساوی شد، کسی بیرون نرفت.", wrong: `شهر اشتباهی ${nameOf(g.accused)} رو گرفت.`,
+      early: g.guess ? `${nameOf(g.guess.by)} زد «${g.guess.word}». ${spyWon ? "درست بود." : "غلط بود."}` : "",
+      last: g.guess ? `حدس آخر: «${g.guess.word}». ${spyWon ? "درست بود!" : "غلط بود."}` : "" }[g.reason] || "";
+    return `<div class="screen">${top("دور " + fa(g.round))}
+      <div class="center" style="padding:24px 0;display:flex;flex-direction:column;align-items:center">
+        <div class="verdict ${spyWon ? "v-spy" : "v-town"}"><span class="display">${spyWon ? "جاسوس برد" : "جاسوس گیر افتاد"}</span></div>
+        <p style="font-size:18px;font-weight:700;margin-top:20px">${iWon ? "تو بردی." : "تو باختی."} <span style="font-weight:400;color:var(--soft)">${esc(why)}</span></p></div>
+      <div class="box center" style="background:var(--lamp);color:var(--ink)"><p style="margin:0;font-weight:700;opacity:.7">کلمه بود</p><p class="display" style="font-size:48px">${esc(g.word)}</p></div>
+      <div class="box mt4" style="background:var(--night)"><p class="label">${g.spies.length > 1 ? "جاسوس‌ها" : "جاسوس"}</p>
+        <div class="stack">${g.spies.map((id) => `<div style="display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px">${av(nameOf(id))}${id === S.me.id ? "خودت" : esc(nameOf(id))}</div>`).join("")}</div></div>
+      <div class="grow"></div>
+      <div class="mt8"><button class="btn lamp" data-do="lobby">برگرد سر میز</button></div></div>`;
+  }
+
+  function spectator() {
+    return `<div class="screen" style="justify-content:center;text-align:center">
+      <p class="display" style="font-size:60px;color:var(--lamp)">جاسوس</p>
+      <p style="font-size:18px">یه دور در جریانه.</p><p class="muted" style="font-size:16px">دور بعد تو هم بازی می‌کنی.</p>
+      <div class="ticket mt6" style="cursor:default"><p class="t1">کد اتاق</p><p class="display t2">${fa(S.code)}</p></div></div>`;
+  }
+
+  let lastKey = "";
+  function render() {
+    let html;
+    if (!session) html = gate();
+    else if (!S) html = `<div class="screen" style="justify-content:center;text-align:center"><p class="display" style="font-size:56px;color:var(--lamp)">جاسوس</p><p class="muted">در حال وصل شدن…</p></div>`;
+    else {
+      const p = S.game.phase;
+      html = p === "lobby" ? lobby() : !S.game.inRound ? spectator() : p === "play" ? play() : p === "vote" ? vote() : p === "last" ? last() : result();
+      if (!connected) html = `<p class="banner">اتصال قطع شد، دارم دوباره وصل می‌شم…</p>` + html;
+    }
+    // انیمیشن ورود فقط وقتی صفحه عوض می‌شه
+    const key = session ? (S ? S.game.phase + S.game.inRound + guessing : "load") : "gate";
+    const keepInputs = !session && document.getElementById("name");
+    if (keepInputs && lastKey === key) { document.querySelector(".err").textContent = gateErr; return; }
+    $app.innerHTML = html;
+    if (lastKey === key) { const sc = $app.querySelector(".screen"); if (sc) sc.style.animation = "none"; }
+    lastKey = key;
+    bind();
+  }
+
+  function bind() {
+    const card = document.getElementById("card");
+    if (card) {
+      const open = (e) => { e.preventDefault(); holding = true; card.classList.add("open"); };
+      card.addEventListener("pointerdown", open);
+      card.addEventListener("contextmenu", (e) => e.preventDefault());
+      card.addEventListener("keydown", (e) => (e.key === " " || e.key === "Enter") && open(e));
+    }
+    const code = document.getElementById("code");
+    if (code) code.addEventListener("input", () => { const v = toLatin(code.value); code.value = fa(v); gateErr = ""; document.querySelector(".err").textContent = ""; });
+    const form = document.getElementById("joinForm");
+    if (form) form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("name").value.trim();
+      const c = toLatin(code.value);
+      if (!name) { gateErr = "اول اسمت رو بنویس."; return render(); }
+      if (c.length !== 5) { gateErr = "کد ۵ رقمیه."; return render(); }
+      try { localStorage.setItem("jasoos-name", name); save(await post("/api/join", { name, code: c })); gateErr = ""; history.replaceState(null, "", "/?room=" + c); connect(); render(); }
+      catch (err) { gateErr = err.message; render(); }
+    });
+  }
+
+  const closeCard = () => { if (!holding) return; holding = false; const c = document.getElementById("card"); if (c) c.classList.remove("open"); };
+  ["pointerup", "pointercancel", "keyup", "blur"].forEach((ev) => window.addEventListener(ev, closeCard));
+
+  document.addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-do]");
+    if (!b) return;
+    const v = b.dataset.v, d = b.dataset.do;
+    if (d === "create") {
+      const name = document.getElementById("name").value.trim();
+      if (!name) { gateErr = "اول اسمت رو بنویس."; return render(); }
+      try { localStorage.setItem("jasoos-name", name); const s = await post("/api/create", { name }); save(s); history.replaceState(null, "", "/?room=" + s.code); connect(); render(); }
+      catch (err) { gateErr = err.message; render(); }
+    }
+    else if (d === "copy") {
+      const link = location.origin + "/?room=" + S.code;
+      try { if (navigator.share && matchMedia("(pointer:coarse)").matches) await navigator.share({ title: "جاسوس", text: "بیا جاسوس بازی. کد اتاق: " + S.code, url: link }); else await navigator.clipboard.writeText(link); copied = true; render(); setTimeout(() => { copied = false; render(); }, 1600); } catch {}
+    }
+    else if (d === "leave") { await act("leave"); if (es) es.close(); es = null; save(null); S = null; history.replaceState(null, "", "/"); render(); }
+    else if (d === "cat") act("settings", { cat: v });
+    else if (d === "min") act("settings", { minutes: S.settings.minutes + Number(v) });
+    else if (d === "spy") act("settings", { spyCount: S.settings.spyCount + Number(v) });
+    else if (d === "start") act("start");
+    else if (d === "reset") act("resetScores");
+    else if (d === "toVote") act("toVote");
+    else if (d === "wantGuess") { guessing = true; render(); }
+    else if (d === "noguess") { guessing = false; render(); }
+    else if (d === "guess") act("guess", { word: v });
+    else if (d === "vote") act("vote", { target: v });
+    else if (d === "countNow") act("countNow");
+    else if (d === "cancel" || d === "lobby") act("lobby");
+  });
+
+  setInterval(() => {
+    if (!S || S.game.phase !== "play") return;
+    const el = document.getElementById("clk"); if (!el) return;
+    const c = clockText(); el.textContent = c.text; el.classList.toggle("low", c.low);
+    const n = document.getElementById("clkNote"); if (n) n.textContent = c.over ? "وقت تموم شد. بریم سراغ رأی." : "تا رأی‌گیری";
+  }, 500);
+
+  if (session) connect();
+  render();
+})();
+</script>
+</body>
+</html>
