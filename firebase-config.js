@@ -11,4 +11,4 @@ export const firebaseConfig = {
 // آدرس سایت بازی برای لینک دعوت (وقتی روی GitHub Pages گذاشتی اینجا بنویس).
 // مثال: "https://soheilezz.github.io/spy-online"
 // داخل اپ اندروید این لازمه، چون آدرس خود اپ قابل دعوت نیست.
-export const WEB_URL = "";
+export const WEB_URL = "soheil.github.io/spy-online";
