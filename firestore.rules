@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function roomPath(code) { return /databases/$(database)/documents/rooms/$(code); }
+    function isHost(code) { return signedIn() && get(roomPath(code)).data.host == request.auth.uid; }
+    function isMember(code) {
+      return signedIn() && exists(/databases/$(database)/documents/rooms/$(code)/players/$(request.auth.uid));
+    }
+    // میزبان بیشتر از ۹۰ ثانیه ضربان نزده یا از اتاق رفته
+    function hostStale(code, h) {
+      let p = /databases/$(database)/documents/rooms/$(code)/players/$(h);
+      return !exists(p) || get(p).data.seen < request.time - duration.value(90, 's');
+    }
+
+    match /rooms/{code} {
+      // هر کس کد اتاق رو بدونه می‌تونه بخونتش، ولی لیست اتاق‌ها قابل خوندن نیست
+      allow get: if signedIn();
+      allow create: if signedIn() && request.resource.data.host == request.auth.uid;
+      allow update: if signedIn() && (
+        resource.data.host == request.auth.uid ||
+        (request.resource.data.host == request.auth.uid && isMember(code) && hostStale(code, resource.data.host))
+      );
+      allow delete: if signedIn() && resource.data.host == request.auth.uid;
+
+      match /players/{uid} {
+        allow read: if signedIn();
+        allow create, update: if signedIn() && request.auth.uid == uid
+          && exists(roomPath(code))
+          && request.resource.data.name is string
+          && request.resource.data.name.size() <= 20;
+        allow delete: if signedIn() && request.auth.uid == uid;
+      }
+
+      // کلمه‌ی هر بازیکن: فقط خودش می‌خونه، فقط میزبان می‌نویسه
+      match /secrets/{uid} {
+        allow read: if signedIn() && request.auth.uid == uid;
+        allow write: if isHost(code);
+      }
+
+      // کلمه‌ی اصلی، جاسوس‌ها و رأی‌ها: فقط میزبان
+      match /private/{doc} {
+        allow read, write: if isHost(code);
+      }
+
+      // درخواست‌های بازیکن‌ها به میزبان
+      match /actions/{id} {
+        allow create: if isMember(code) && request.resource.data.by == request.auth.uid;
+        allow read, delete: if isHost(code);
+      }
+    }
+  }
+}

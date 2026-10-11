@@ -97,48 +97,124 @@
 <body>
 <div class="beam" aria-hidden="true"></div>
 <main id="app"></main>
-<script>
-(() => {
-  const $app = document.getElementById("app");
-  const FA = "۰۱۲۳۴۵۶۷۸۹";
-  const fa = (v) => String(v).replace(/[0-9]/g, (d) => FA[d]);
-  const toLatin = (v) => v.replace(/[۰-۹]/g, (d) => FA.indexOf(d)).replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/\D/g, "").slice(0, 5);
-  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const initial = (n) => esc((n || "?").trim().charAt(0));
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { initializeFirestore, doc, collection, setDoc, updateDoc, getDoc, getDocs, deleteDoc, addDoc, onSnapshot, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { CATEGORIES } from "./words.js";
+import { createNet } from "./net.js";
+import { firebaseConfig, WEB_URL } from "./firebase-config.js";
 
-  let session = JSON.parse(localStorage.getItem("jasoos") || "null");
-  let S = null; // آخرین وضعیت از سرور
-  let es = null, skew = 0, holding = false, guessing = false, gateErr = "", copied = false, connected = false;
-  const params = new URLSearchParams(location.search);
+const $app = document.getElementById("app");
+const FA = "۰۱۲۳۴۵۶۷۸۹";
+const fa = (v) => String(v).replace(/[0-9]/g, (d) => FA[d]);
+const toLatin = (v) => v.replace(/[۰-۹]/g, (d) => FA.indexOf(d)).replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/\D/g, "").slice(0, 5);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const initial = (n) => esc((n || "?").trim().charAt(0));
 
-  const save = (s) => { session = s; s ? localStorage.setItem("jasoos", JSON.stringify(s)) : localStorage.removeItem("jasoos"); };
+let session = JSON.parse(localStorage.getItem("jasoos2") || "null"); // { code }
+let S = null; // وضعیت آماده برای صفحه‌ها
+let net = null, uid = null, skew = 0, holding = false, guessing = false, gateErr = "", copied = false, connected = true;
+let notice = "", noticeTimer = 0, busy = false, leaving = false, lastSig = "", prevPhase = "";
+const params = new URLSearchParams(location.search);
+const save = (s) => { session = s; s ? localStorage.setItem("jasoos2", JSON.stringify(s)) : localStorage.removeItem("jasoos2"); };
 
-  async function post(url, body) {
-    const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(j.error || "خطا");
-    return j;
-  }
-  const act = (type, extra = {}) => post("/api/action", { ...session, type, ...extra }).catch(() => {});
+/* ---------- Firebase ---------- */
 
-  function connect() {
-    if (es) es.close();
-    const q = new URLSearchParams(session).toString();
-    es = new EventSource("/api/events?" + q);
-    es.onopen = () => { connected = true; };
-    es.onmessage = (e) => {
-      const next = JSON.parse(e.data);
-      skew = next.now - Date.now();
-      if (S && S.game.phase !== next.game.phase) guessing = false;
-      S = next; connected = true; render();
-    };
-    es.onerror = async () => {
-      connected = false; render();
-      // اگه اتاق دیگه وجود نداره، برگرد به صفحه اول
-      const r = await fetch("/api/events?" + q, { method: "HEAD" }).catch(() => null);
-      if (r && r.status === 403) { es.close(); es = null; save(null); S = null; render(); }
-    };
-  }
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
+const fb = { db, doc, collection, setDoc, updateDoc, getDoc, getDocs, deleteDoc, addDoc, onSnapshot, writeBatch, serverTimestamp };
+
+const NET_MSG = "به سرور وصل نشد. اینترنت یا فیلترشکن رو چک کن.";
+const withTimeout = (p, msg = NET_MSG, t = 15000) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(msg)), t))]);
+const friendly = (e) => {
+  const m = (e && e.message) || "", c = (e && e.code) || "";
+  if (/[\u0600-\u06FF]/.test(m)) return m;
+  if (c === "auth/operation-not-allowed" || c === "auth/admin-restricted-operation") return "ورود ناشناس توی Firebase روشن نیست (Authentication → Anonymous).";
+  if (c === "permission-denied") return "دسترسی رد شد. قوانین Firestore رو چک کن.";
+  if (c.includes("network") || c === "unavailable") return NET_MSG;
+  return "یه مشکلی پیش اومد: " + (c || m || "نامشخص");
+};
+
+async function ensureNet() {
+  if (net) return net;
+  const user = await withTimeout(new Promise((res, rej) => {
+    const un = onAuthStateChanged(auth, (u) => { if (u) { un(); res(u); } });
+    signInAnonymously(auth).catch(rej);
+  }));
+  uid = user.uid;
+  net = createNet(fb, uid, { onChange, onRoomGone, onError: (e) => flash(friendly(e)) });
+  return net;
+}
+
+function flash(msg) {
+  notice = msg; render();
+  clearTimeout(noticeTimer);
+  noticeTimer = setTimeout(() => { notice = ""; render(); }, 3500);
+}
+
+function onRoomGone() {
+  if (leaving) return;
+  save(null); S = null; lastSig = "";
+  gateErr = "اتاق بسته شد.";
+  history.replaceState(null, "", location.pathname);
+  render();
+}
+
+function buildS() {
+  const st = net && net.state;
+  if (!st || !st.room) return null;
+  const r = st.room;
+  skew = st.skew;
+  const me = st.players.get(uid);
+  const inRound = r.phase !== "lobby" && r.roster.includes(uid);
+  const sec = st.secret && st.secret.round === r.round ? st.secret : null;
+  const reveal = r.phase === "result" && r.result ? r.result : null;
+  const amSpy = inRound && (reveal ? reveal.spies.includes(uid) : !!(sec && sec.amSpy));
+  const word = reveal ? reveal.word : inRound && sec && !sec.amSpy ? sec.word : "";
+  const voters = r.roster.filter((id) => st.players.has(id) && net.isOnline(id));
+  const voted = r.votedIds || [];
+  const mv = st.myVote && st.myVote.round === r.round ? st.myVote.target : "";
+  const endsAt = (r.startedAt || Date.now() + st.skew) + r.settings.minutes * 60000;
+  return {
+    code: st.code,
+    me: { id: uid, name: me ? me.name : "" },
+    host: r.host,
+    settings: r.settings,
+    categories: Object.fromEntries(Object.entries(CATEGORIES).map(([k, v]) => [k, v.label])),
+    players: [...st.players.values()].sort((a, b) => a.joinedAt - b.joinedAt || (a.id < b.id ? -1 : 1)).map((p) => ({ id: p.id, name: p.name, online: net.isOnline(p.id) })),
+    scores: r.scores || {},
+    game: {
+      phase: r.phase, round: r.round, roster: r.roster, starter: r.starter, endsAt,
+      cat: inRound ? r.cat : "", word, amSpy, inRound,
+      loading: inRound && !sec && !reveal,
+      spies: reveal ? reveal.spies : [],
+      accused: r.phase === "last" || reveal ? r.accused : "",
+      guess: reveal ? reveal.guess : null,
+      outcome: reveal ? reveal.outcome : "",
+      reason: reveal ? reveal.reason : "",
+      myVote: mv || (voted.includes(uid) ? "_" : ""),
+      votedCount: voters.filter((id) => voted.includes(id)).length,
+      voterCount: voters.length,
+      guessWords: amSpy && (r.phase === "play" || (r.phase === "last" && r.accused === uid)) ? CATEGORIES[r.cat].words : [],
+    },
+  };
+}
+
+function onChange() {
+  if (net && net.state.code && !session) save({ code: net.state.code });
+  S = buildS();
+  connected = net ? net.connected() : true;
+  if (S && prevPhase && prevPhase !== S.game.phase) guessing = false;
+  prevPhase = S ? S.game.phase : "";
+  const sig = JSON.stringify([S, connected, !!session]);
+  if (sig === lastSig) return;
+  lastSig = sig;
+  render();
+}
+
+const act = (type, extra) => net && net.act(type, extra);
 
   /* ---------- screens ---------- */
 
@@ -285,24 +361,44 @@
       <div class="ticket mt6" style="cursor:default"><p class="t1">کد اتاق</p><p class="display t2">${fa(S.code)}</p></div></div>`;
   }
 
+
+  const LOADING = `<div class="screen" style="justify-content:center;text-align:center"><p class="display" style="font-size:56px;color:var(--lamp)">جاسوس</p><p class="muted">در حال وصل شدن…</p></div>`;
   let lastKey = "";
   function render() {
     let html;
     if (!session) html = gate();
-    else if (!S) html = `<div class="screen" style="justify-content:center;text-align:center"><p class="display" style="font-size:56px;color:var(--lamp)">جاسوس</p><p class="muted">در حال وصل شدن…</p></div>`;
+    else if (!S || S.game.loading) html = LOADING;
     else {
       const p = S.game.phase;
       html = p === "lobby" ? lobby() : !S.game.inRound ? spectator() : p === "play" ? play() : p === "vote" ? vote() : p === "last" ? last() : result();
       if (!connected) html = `<p class="banner">اتصال قطع شد، دارم دوباره وصل می‌شم…</p>` + html;
     }
+    if (notice) html = `<p class="banner">${esc(notice)}</p>` + html;
     // انیمیشن ورود فقط وقتی صفحه عوض می‌شه
-    const key = session ? (S ? S.game.phase + S.game.inRound + guessing : "load") : "gate";
+    const key = session ? (S && !S.game.loading ? S.game.phase + S.game.inRound + guessing : "load") : "gate";
     const keepInputs = !session && document.getElementById("name");
-    if (keepInputs && lastKey === key) { document.querySelector(".err").textContent = gateErr; return; }
+    if (keepInputs && lastKey === key && !notice) { document.querySelector(".err").textContent = gateErr; return; }
     $app.innerHTML = html;
     if (lastKey === key) { const sc = $app.querySelector(".screen"); if (sc) sc.style.animation = "none"; }
     lastKey = key;
     bind();
+  }
+
+  const setErr = (m) => { gateErr = m; const e = document.querySelector(".err"); if (e) e.textContent = m; };
+
+  async function enter(promiseFn, c) {
+    if (busy) return;
+    busy = true;
+    try {
+      const n = await ensureNet();
+      await withTimeout(promiseFn(n), NET_MSG, 20000);
+      gateErr = "";
+      save({ code: c || net.state.code });
+      history.replaceState(null, "", "?room=" + (c || net.state.code));
+      onChange();
+      render();
+    } catch (err) { gateErr = friendly(err); render(); }
+    finally { busy = false; }
   }
 
   function bind() {
@@ -316,14 +412,15 @@
     const code = document.getElementById("code");
     if (code) code.addEventListener("input", () => { const v = toLatin(code.value); code.value = fa(v); gateErr = ""; document.querySelector(".err").textContent = ""; });
     const form = document.getElementById("joinForm");
-    if (form) form.addEventListener("submit", async (e) => {
+    if (form) form.addEventListener("submit", (e) => {
       e.preventDefault();
       const name = document.getElementById("name").value.trim();
       const c = toLatin(code.value);
       if (!name) { gateErr = "اول اسمت رو بنویس."; return render(); }
       if (c.length !== 5) { gateErr = "کد ۵ رقمیه."; return render(); }
-      try { localStorage.setItem("jasoos-name", name); save(await post("/api/join", { name, code: c })); gateErr = ""; history.replaceState(null, "", "/?room=" + c); connect(); render(); }
-      catch (err) { gateErr = err.message; render(); }
+      localStorage.setItem("jasoos-name", name);
+      setErr("در حال ورود…");
+      enter((n) => n.joinRoom(name, c), c);
     });
   }
 
@@ -337,14 +434,29 @@
     if (d === "create") {
       const name = document.getElementById("name").value.trim();
       if (!name) { gateErr = "اول اسمت رو بنویس."; return render(); }
-      try { localStorage.setItem("jasoos-name", name); const s = await post("/api/create", { name }); save(s); history.replaceState(null, "", "/?room=" + s.code); connect(); render(); }
-      catch (err) { gateErr = err.message; render(); }
+      localStorage.setItem("jasoos-name", name);
+      setErr("در حال ساختن اتاق…");
+      enter((n) => n.createRoom(name));
     }
     else if (d === "copy") {
-      const link = location.origin + "/?room=" + S.code;
-      try { if (navigator.share && matchMedia("(pointer:coarse)").matches) await navigator.share({ title: "جاسوس", text: "بیا جاسوس بازی. کد اتاق: " + S.code, url: link }); else await navigator.clipboard.writeText(link); copied = true; render(); setTimeout(() => { copied = false; render(); }, 1600); } catch {}
+      const canLink = WEB_URL || (/^https?:$/.test(location.protocol) && location.hostname !== "localhost");
+      const base = (WEB_URL || location.origin + location.pathname).replace(/\/index\.html$/, "").replace(/\/$/, "");
+      const link = base + "/?room=" + S.code;
+      const text = "بیا جاسوس بازی. کد اتاق: " + S.code;
+      try {
+        if (navigator.share && matchMedia("(pointer:coarse)").matches) await navigator.share(canLink ? { title: "جاسوس", text, url: link } : { title: "جاسوس", text });
+        else await navigator.clipboard.writeText(canLink ? link : text);
+        copied = true; render(); setTimeout(() => { copied = false; render(); }, 1600);
+      } catch {}
     }
-    else if (d === "leave") { await act("leave"); if (es) es.close(); es = null; save(null); S = null; history.replaceState(null, "", "/"); render(); }
+    else if (d === "leave") {
+      leaving = true;
+      await net.leave();
+      leaving = false;
+      save(null); S = null; lastSig = ""; prevPhase = "";
+      history.replaceState(null, "", location.pathname);
+      render();
+    }
     else if (d === "cat") act("settings", { cat: v });
     else if (d === "min") act("settings", { minutes: S.settings.minutes + Number(v) });
     else if (d === "spy") act("settings", { spyCount: S.settings.spyCount + Number(v) });
@@ -354,10 +466,12 @@
     else if (d === "wantGuess") { guessing = true; render(); }
     else if (d === "noguess") { guessing = false; render(); }
     else if (d === "guess") act("guess", { word: v });
-    else if (d === "vote") act("vote", { target: v });
+    else if (d === "vote") { act("vote", { target: v }); onChange(); }
     else if (d === "countNow") act("countNow");
     else if (d === "cancel" || d === "lobby") act("lobby");
   });
+
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && net) { net.beat(); net.tick(); } });
 
   setInterval(() => {
     if (!S || S.game.phase !== "play") return;
@@ -366,9 +480,20 @@
     const n = document.getElementById("clkNote"); if (n) n.textContent = c.over ? "وقت تموم شد. بریم سراغ رأی." : "تا رأی‌گیری";
   }, 500);
 
-  if (session) connect();
-  render();
-})();
+  (async function boot() {
+    render();
+    if (session) {
+      try {
+        const n = await ensureNet();
+        const ok = await withTimeout(n.resume(session.code));
+        if (!ok) { save(null); gateErr = "اتاق قبلی پیدا نشد."; }
+        else onChange();
+      } catch (err) { save(null); gateErr = friendly(err); }
+      render();
+    } else {
+      ensureNet().catch(() => {});
+    }
+  })();
 </script>
 </body>
 </html>

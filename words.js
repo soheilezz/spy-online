@@ -1,4 +1,4 @@
-const CATEGORIES = {
+export const CATEGORIES = {
   places: {
     label: "مکان",
     words: ["فرودگاه", "بیمارستان", "مدرسه", "سینما", "بانک", "رستوران", "ساحل", "کتابخانه", "باشگاه بدنسازی", "ایستگاه مترو", "بازار", "آرایشگاه", "پارک", "هتل", "کشتی تفریحی", "زیردریایی", "ایستگاه فضایی", "سیرک", "باغ وحش", "استادیوم فوتبال", "پمپ بنزین", "نانوایی", "مراسم عروسی", "کلانتری", "دانشگاه", "قطار", "کافه", "موزه", "حمام عمومی", "پاساژ"],
@@ -25,4 +25,4 @@ const CATEGORIES = {
   },
 };
 
-module.exports = { CATEGORIES, CATEGORY_KEYS: Object.keys(CATEGORIES) };
+export const CATEGORY_KEYS = Object.keys(CATEGORIES);
