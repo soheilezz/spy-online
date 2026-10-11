@@ -11,7 +11,7 @@ const ms = (t) => (t && typeof t.toMillis === "function" ? t.toMillis() : typeof
 const byJoin = (a, b) => a.joinedAt - b.joinedAt || (a.id < b.id ? -1 : 1);
 
 export function createNet(fb, uid, hooks = {}, opts = {}) {
-  const { db, doc, collection, setDoc, updateDoc, getDoc, getDocs, deleteDoc, addDoc, onSnapshot, writeBatch, serverTimestamp } = fb;
+  const { db, doc, collection, setDoc, updateDoc, getDoc, getDocs, deleteDoc, addDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy, limitToLast } = fb;
   const now = opts.now || (() => Date.now());
   const useTimers = opts.timers !== false;
 
@@ -21,12 +21,13 @@ export function createNet(fb, uid, hooks = {}, opts = {}) {
   const SEC = (c, id) => doc(db, "rooms", c, "secrets", id);
   const PRIV = (c) => doc(db, "rooms", c, "private", "host");
   const ACT = (c) => collection(db, "rooms", c, "actions");
+  const CHAT = (c) => collection(db, "rooms", c, "chat");
 
-  const st = { code: "", room: null, players: new Map(), secret: null, skew: 0, myVote: null };
+  const st = { code: "", room: null, players: new Map(), secret: null, skew: 0, myVote: null, chat: [] };
   const presence = new Map(); // id -> { beat, at } (زمان محلی آخرین تغییر ضربان)
   const seenActions = new Set();
   let unsubs = [], timerIds = [], hostUnsub = null, hostActive = false, privReady = null, priv = null;
-  let chain = Promise.resolve(), claiming = false, offlineSince = 0;
+  let chain = Promise.resolve(), claiming = false, offlineSince = 0, leavingSelf = false, sawMe = false, lastSeen = 0;
 
   const changed = () => hooks.onChange && hooks.onChange();
   const isHost = () => !!st.room && st.room.host === uid;
@@ -58,6 +59,7 @@ export function createNet(fb, uid, hooks = {}, opts = {}) {
     let n = 0;
     if (res.secrets) for (const [id, s] of Object.entries(res.secrets)) { batch.set(SEC(st.code, id), s); n++; }
     if (res.clearSecrets) for (const id of res.clearSecrets) { batch.delete(SEC(st.code, id)); n++; }
+    if (res.kick) { batch.delete(P(st.code, res.kick)); n++; }
     if (JSON.stringify(p) !== JSON.stringify(priv)) { batch.set(PRIV(st.code), p); n++; }
     if (Object.keys(patch).length) {
       const up = { ...patch };
@@ -156,17 +158,31 @@ export function createNet(fb, uid, hooks = {}, opts = {}) {
       const t = now(), next = new Map();
       snap.forEach((ds) => {
         const d = ds.data();
-        next.set(ds.id, { id: ds.id, name: d.name || "", joinedAt: d.joinedAt || 0 });
+        next.set(ds.id, { id: ds.id, name: d.name || "", joinedAt: d.joinedAt || 0, vs: d.vs || "", mic: !!d.mic });
         const p = presence.get(ds.id);
         if (!p) presence.set(ds.id, { beat: d.beat, at: t });
         else if (p.beat !== d.beat) { p.beat = d.beat; p.at = t; }
         const seen = ms(d.seen);
-        if (ds.id === uid && seen && !ds.metadata.hasPendingWrites) st.skew = seen - t;
+        // فقط وقتی ضربان خودم تازه برگشته، اختلاف ساعت با سرور رو حساب کن (وگرنه ضربان قدیمی حسابش رو خراب می‌کنه)
+        if (ds.id === uid && seen && !ds.metadata.hasPendingWrites && seen !== lastSeen) { lastSeen = seen; st.skew = seen - t; }
       });
       for (const id of [...presence.keys()]) if (!next.has(id)) presence.delete(id);
+      // اگه سند خودم پاک شد و خودم نرفتم، یعنی میزبان بیرونم کرده
+      if (next.has(uid)) sawMe = true;
+      else if (sawMe && !leavingSelf && !snap.metadata.hasPendingWrites && !snap.metadata.fromCache) {
+        const code = st.code;
+        detach();
+        hooks.onKicked && hooks.onKicked(code);
+        return;
+      }
       st.players = next;
       tick();
       changed();
+    }, () => {}));
+
+    unsubs.push(onSnapshot(query(CHAT(code), orderBy("at"), limitToLast(120)), (snap) => {
+      st.chat = snap.docs.map((ds) => ({ id: ds.id, ...ds.data() }));
+      hooks.onChat && hooks.onChat();
     }, () => {}));
 
     unsubs.push(onSnapshot(SEC(code, uid), (snap) => {
@@ -186,7 +202,8 @@ export function createNet(fb, uid, hooks = {}, opts = {}) {
     timerIds.forEach(clearInterval);
     timerIds = [];
     stopHost();
-    Object.assign(st, { code: "", room: null, players: new Map(), secret: null, myVote: null });
+    Object.assign(st, { code: "", room: null, players: new Map(), secret: null, myVote: null, chat: [] });
+    sawMe = false;
     presence.clear();
     seenActions.clear();
     offlineSince = 0;
@@ -203,7 +220,7 @@ export function createNet(fb, uid, hooks = {}, opts = {}) {
         if (e && e.code === "permission-denied") continue; // کد تکراری
         throw e;
       }
-      await setDoc(P(code, uid), { name, joinedAt: now(), beat: now(), seen: serverTimestamp() });
+      await setDoc(P(code, uid), { name, joinedAt: now(), beat: now(), seen: serverTimestamp(), vs: "", mic: false });
       attach(code);
       return code;
     }
@@ -213,11 +230,12 @@ export function createNet(fb, uid, hooks = {}, opts = {}) {
   async function joinRoom(name, code) {
     const rs = await getDoc(R(code));
     if (!rs.exists()) throw new Error("همچین اتاقی پیدا نشد");
+    if ((rs.data().kicked || []).includes(uid)) throw new Error("میزبان تو رو از این اتاق بیرون کرده");
     const pl = await getDocs(PL(code));
     const mine = pl.docs.find((d) => d.id === uid);
     if (!mine && pl.size >= MAX_PLAYERS) throw new Error("اتاق پره");
-    if (mine) await updateDoc(P(code, uid), { name, beat: now(), seen: serverTimestamp() });
-    else await setDoc(P(code, uid), { name, joinedAt: now(), beat: now(), seen: serverTimestamp() });
+    if (mine) await updateDoc(P(code, uid), { name, beat: now(), seen: serverTimestamp(), vs: "", mic: false });
+    else await setDoc(P(code, uid), { name, joinedAt: now(), beat: now(), seen: serverTimestamp(), vs: "", mic: false });
     attach(code);
   }
 
@@ -226,7 +244,7 @@ export function createNet(fb, uid, hooks = {}, opts = {}) {
     if (!rs.exists()) return false;
     const ps = await getDoc(P(code, uid));
     if (!ps.exists()) return false;
-    await updateDoc(P(code, uid), { beat: now(), seen: serverTimestamp() });
+    await updateDoc(P(code, uid), { beat: now(), seen: serverTimestamp(), vs: "", mic: false });
     attach(code);
     return true;
   }
@@ -235,6 +253,7 @@ export function createNet(fb, uid, hooks = {}, opts = {}) {
     const code = st.code, r = st.room;
     if (!code) return;
     const others = [...st.players.values()].filter((p) => p.id !== uid);
+    leavingSelf = true;
     try {
       if (r && r.host === uid) {
         const next = others.filter((p) => isOnline(p.id)).sort(byJoin)[0] || others.sort(byJoin)[0];
@@ -244,6 +263,24 @@ export function createNet(fb, uid, hooks = {}, opts = {}) {
       await deleteDoc(P(code, uid));
     } catch { /* مهم نیست */ }
     detach();
+    leavingSelf = false;
+  }
+
+  function sendChat(msg) {
+    if (!st.code) return Promise.resolve();
+    const me = st.players.get(uid);
+    const text = String(msg.text || "").trim().slice(0, 300);
+    if (!text) return Promise.resolve();
+    return addDoc(CHAT(st.code), {
+      by: uid, name: (me && me.name) || "", text, kind: msg.kind || "msg",
+      target: msg.target || "", tname: msg.tname || "", at: now() + st.skew,
+    });
+  }
+
+  // فیلدهای صدا روی سند خودم (vs = شناسه‌ی جلسه‌ی صدا، mic = میکروفون روشنه)
+  function setMe(fields) {
+    if (!st.code) return Promise.resolve();
+    return updateDoc(P(st.code, uid), fields).catch(() => {});
   }
 
   function act(type, extra = {}) {
@@ -257,5 +294,5 @@ export function createNet(fb, uid, hooks = {}, opts = {}) {
     return addDoc(ACT(st.code), { ...a, at: now() }).then(() => {}, () => {});
   }
 
-  return { state: st, isOnline, onlineIds, connected, createRoom, joinRoom, resume, leave, act, tick, beat, destroy: detach };
+  return { state: st, isOnline, onlineIds, connected, createRoom, joinRoom, resume, leave, act, tick, beat, sendChat, setMe, destroy: detach };
 }

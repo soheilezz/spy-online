@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#0e1540" />
 <title>جاسوس</title>
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Vazirmatn:wght@400;500;700;800&display=swap" />
 <style>
@@ -50,7 +53,7 @@
   .ticket .t1 { font-weight: 700; opacity: .7; margin: 0; font-size: 16px; } .ticket .t2 { font-size: clamp(64px, 20vw, 92px); letter-spacing: .08em; direction: ltr; line-height: 1; margin: 4px 0; } .ticket .t3 { font-weight: 700; opacity: .7; margin: 0; font-size: 14px; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0; }
   .chip { display: flex; align-items: center; gap: 8px; background: var(--night); border-radius: 999px; padding: 6px 16px 6px 6px; font-weight: 700; }
-  .chip.me { background: var(--lamp); color: var(--ink); } .chip.off { opacity: .45; }
+  .chip.me { background: var(--lamp); color: var(--ink); } .chip.off { opacity: .6; }
   .chip small { font-weight: 500; opacity: .7; font-size: 13px; }
   .av { width: 30px; height: 30px; border-radius: 50%; background: var(--chip); color: var(--lamp); display: grid; place-items: center; font-weight: 800; flex-shrink: 0; font-size: 13px; }
   .pills { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -92,17 +95,91 @@
   .grow { flex: 1; } .center { text-align: center; } .mt8 { margin-top: 32px; } .mt4 { margin-top: 16px; } .mt6 { margin-top: 24px; }
   .banner { background: var(--night); border-radius: 999px; padding: 8px 16px; text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 16px; }
   .blink { animation: blink 1.6s infinite; } @keyframes blink { 50% { opacity: .55; } }
+
+  /* ---- نشانه‌های کنار اسم ---- */
+  .ico { display: inline-flex; flex-shrink: 0; }
+  .nosig { color: #ff8a98; } .micon { color: var(--teal); }
+  .kick { width: 26px; height: 26px; margin-inline-start: 2px; border: 0; border-radius: 50%; background: rgba(212,21,47,.18); color: #ff9aa6; display: grid; place-items: center; cursor: pointer; padding: 0; }
+  .chip.me .kick { display: none; }
+  .kick:hover { background: var(--red); color: #fff; }
+
+  /* ---- QR زیر کد اتاق ---- */
+  .qr { width: 92px; height: 92px; margin: 8px auto 6px; padding: 6px; background: #fff; border-radius: 14px; box-shadow: 0 4px 0 rgba(14,21,64,.18); }
+  .qr svg { display: block; width: 100%; height: 100%; }
+
+  /* ---- ورودی عددی ---- */
+  input.num { width: 64px; border: 0; outline: 0; border-radius: 12px; padding: 6px 4px; background: var(--chip); color: var(--lamp); font: 800 20px Vazirmatn, sans-serif; text-align: center; }
+  input.num:focus { box-shadow: 0 0 0 3px rgba(243,213,103,.45); }
+  input.num:disabled { background: transparent; }
+  .unit { color: var(--soft) !important; font-size: 16px !important; min-width: 0 !important; }
+  .addw { display: flex; gap: 8px; }
+  .addw .field { flex: 1; min-width: 0; }
+  .addw .btn { width: auto; padding: 12px 18px; font-size: 16px; flex-shrink: 0; }
+  select.field { appearance: none; -webkit-appearance: none; cursor: pointer; font: 700 16px Vazirmatn, sans-serif; width: auto; padding: 12px 16px; border: 0; outline: 0; background: var(--night); color: var(--text); border-radius: 16px; }
+  .wchips .chip { padding: 6px 8px 6px 14px; font-size: 15px; }
+
+  /* ---- پایان بازی ---- */
+  .champ { background: var(--night2); border-radius: 24px; padding: 18px 20px; }
+  .champ .display { color: var(--lamp); font-size: 40px; }
+  .score.top { background: var(--lamp); color: var(--ink); } .score.top .display { color: var(--ink); }
+
+  /* ---- داک پایین: میکروفون، چت، هدفون ---- */
+  body.inroom main { padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
+  .dockbar { position: fixed; z-index: 30; left: 50%; bottom: calc(12px + env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(440px, calc(100% - 24px));
+    display: grid; grid-template-columns: 1fr 1.3fr 1fr; gap: 8px; padding: 8px; border-radius: 26px; background: rgba(24,35,92,.92);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 12px 32px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06); }
+  .dk { position: relative; border: 0; border-radius: 20px; padding: 8px 4px 6px; background: transparent; color: var(--soft); cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 2px; font: 700 13px Vazirmatn, sans-serif; transition: background .2s, color .2s, transform .1s; }
+  .dk:active { transform: scale(.95); }
+  .dk svg { width: 26px; height: 26px; }
+  .dk.on { background: var(--teal); color: var(--ink); }
+  .dk.mic.on { background: var(--red); color: #fff; }
+  .dk.chatb { background: var(--lamp); color: var(--ink); }
+  .dk.chatb.open { background: var(--text); }
+  .badge { position: absolute; top: 2px; inset-inline-end: 18%; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 99px; background: var(--red); color: #fff; font: 800 13px/22px Vazirmatn, sans-serif; text-align: center; box-shadow: 0 0 0 3px rgba(24,35,92,.92); }
+  .dk.on .live { position: absolute; top: 8px; inset-inline-start: 22%; width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: blink 1.4s infinite; }
+
+  .sheet { position: fixed; z-index: 29; left: 50%; bottom: calc(88px + env(safe-area-inset-bottom)); width: min(440px, calc(100% - 24px));
+    height: min(62vh, 560px); height: min(62dvh, 560px); transform: translate(-50%, 24px); opacity: 0; pointer-events: none;
+    display: flex; flex-direction: column; border-radius: 26px; background: #141d52; box-shadow: 0 18px 48px rgba(0,0,0,.5); transition: transform .28s cubic-bezier(.2,.8,.2,1), opacity .2s; overflow: hidden; }
+  .sheet.open { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
+  .sheet-h { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 8px; }
+  .sheet-h .display { color: var(--lamp); font-size: 26px; }
+  .msgs { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 4px 12px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .msgs .empty { margin: auto; text-align: center; color: var(--muted); font-size: 15px; padding: 0 24px; }
+  .msg { max-width: 82%; align-self: flex-end; background: var(--chip); border-radius: 18px 18px 18px 6px; padding: 8px 12px; }
+  .msg.me { align-self: flex-start; background: var(--lamp); color: var(--ink); border-radius: 18px 18px 6px 18px; }
+  .msg small { display: block; font-size: 13px; font-weight: 700; color: var(--teal); }
+  .msg.me small { display: none; }
+  .msg p { margin: 0; font-size: 16px; line-height: 1.55; overflow-wrap: anywhere; }
+  .msg.q { align-self: stretch; max-width: none; background: transparent; border: 2px solid var(--red); border-radius: 18px; padding: 10px 14px; }
+  .msg.q .qh { display: flex; align-items: center; gap: 6px; font-size: 14px; color: #ff9aa6; font-weight: 700; }
+  .msg.q .qh b { color: var(--text); font-size: 16px; }
+  .msg.q p { font-size: 18px; font-weight: 800; margin-top: 2px; }
+  .msg.q small { color: var(--muted); font-weight: 500; margin-top: 2px; display: block !important; }
+  .msg.q.forme { background: rgba(212,21,47,.16); }
+  .composer { padding: 10px 12px 12px; background: rgba(14,21,64,.55); }
+  .composer form { display: flex; gap: 8px; }
+  .composer .field { flex: 1; min-width: 0; padding: 12px 14px; font-size: 16px; }
+  .send { width: 48px; height: 48px; flex-shrink: 0; border: 0; border-radius: 16px; background: var(--lamp); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+  .qbtn { margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; font-size: 16px; background: transparent; color: var(--text); box-shadow: inset 0 0 0 2px var(--red); }
+  .qbtn:active { background: var(--red); }
+  @media (prefers-reduced-motion: reduce) { .sheet { transition: none; } .beam { animation: none; } }
 </style>
 </head>
 <body>
 <div class="beam" aria-hidden="true"></div>
 <main id="app"></main>
+<div id="dock"></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { initializeFirestore, doc, collection, setDoc, updateDoc, getDoc, getDocs, deleteDoc, addDoc, onSnapshot, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { CATEGORIES } from "./words.js";
+import { initializeFirestore, doc, collection, setDoc, updateDoc, getDoc, getDocs, deleteDoc, addDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy, limitToLast, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { CATEGORIES, QUESTIONS } from "./words.js";
+import { wordsOf, totalRounds, MAX_MINUTES, MAX_ROUNDS } from "./game.js";
 import { createNet } from "./net.js";
+import { createVoice } from "./voice.js";
+import { qrSvg } from "./qr.js";
 import { firebaseConfig, WEB_URL } from "./firebase-config.js";
 
 const $app = document.getElementById("app");
@@ -124,7 +201,10 @@ const save = (s) => { session = s; s ? localStorage.setItem("jasoos2", JSON.stri
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
-const fb = { db, doc, collection, setDoc, updateDoc, getDoc, getDocs, deleteDoc, addDoc, onSnapshot, writeBatch, serverTimestamp };
+const fb = { db, doc, collection, setDoc, updateDoc, getDoc, getDocs, deleteDoc, addDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy, limitToLast, where };
+const toNum = (v) => { const t = String(v).replace(/[۰-۹]/g, (d) => FA.indexOf(d)).replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/\D/g, ""); return t ? parseInt(t, 10) : NaN; };
+let voice = null, chatOpen = false, seenAt = 0, wordCat = "";
+const qQueue = {}; let tQueue = [];
 
 const NET_MSG = "به سرور وصل نشد. اینترنت یا فیلترشکن رو چک کن.";
 const withTimeout = (p, msg = NET_MSG, t = 15000) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(msg)), t))]);
@@ -144,7 +224,7 @@ async function ensureNet() {
     signInAnonymously(auth).catch(rej);
   }));
   uid = user.uid;
-  net = createNet(fb, uid, { onChange, onRoomGone, onError: (e) => flash(friendly(e)) });
+  net = createNet(fb, uid, { onChange, onRoomGone, onKicked, onChat: () => renderChat(), onError: (e) => flash(friendly(e)) });
   return net;
 }
 
@@ -154,8 +234,20 @@ function flash(msg) {
   noticeTimer = setTimeout(() => { notice = ""; render(); }, 3500);
 }
 
+function stopVoice() { if (voice) { voice.destroy(); voice = null; } }
+function resetRoomUi() { stopVoice(); chatOpen = false; seenAt = 0; tQueue = []; }
+
+function onKicked() {
+  resetRoomUi();
+  save(null); S = null; lastSig = ""; prevPhase = "";
+  gateErr = "میزبان تو رو از اتاق بیرون کرد.";
+  history.replaceState(null, "", location.pathname);
+  render();
+}
+
 function onRoomGone() {
   if (leaving) return;
+  resetRoomUi();
   save(null); S = null; lastSig = "";
   gateErr = "اتاق بسته شد.";
   history.replaceState(null, "", location.pathname);
@@ -183,8 +275,11 @@ function buildS() {
     host: r.host,
     settings: r.settings,
     categories: Object.fromEntries(Object.entries(CATEGORIES).map(([k, v]) => [k, v.label])),
-    players: [...st.players.values()].sort((a, b) => a.joinedAt - b.joinedAt || (a.id < b.id ? -1 : 1)).map((p) => ({ id: p.id, name: p.name, online: net.isOnline(p.id) })),
+    players: [...st.players.values()].sort((a, b) => a.joinedAt - b.joinedAt || (a.id < b.id ? -1 : 1)).map((p) => ({ id: p.id, name: p.name, online: net.isOnline(p.id), mic: !!(p.mic && p.vs) })),
     scores: r.scores || {},
+    rounds: totalRounds(r),
+    played: r.played || 0,
+    custom: r.custom || {},
     game: {
       phase: r.phase, round: r.round, roster: r.roster, starter: r.starter, endsAt,
       cat: inRound ? r.cat : "", word, amSpy, inRound,
@@ -197,7 +292,7 @@ function buildS() {
       myVote: mv || (voted.includes(uid) ? "_" : ""),
       votedCount: voters.filter((id) => voted.includes(id)).length,
       voterCount: voters.length,
-      guessWords: amSpy && (r.phase === "play" || (r.phase === "last" && r.accused === uid)) ? CATEGORIES[r.cat].words : [],
+      guessWords: amSpy && (r.phase === "play" || (r.phase === "last" && r.accused === uid)) ? wordsOf(r, r.cat) : [],
     },
   };
 }
@@ -208,6 +303,7 @@ function onChange() {
   connected = net ? net.connected() : true;
   if (S && prevPhase && prevPhase !== S.game.phase) guessing = false;
   prevPhase = S ? S.game.phase : "";
+  if (voice) voice.sync();
   const sig = JSON.stringify([S, connected, !!session]);
   if (sig === lastSig) return;
   lastSig = sig;
@@ -238,6 +334,23 @@ const act = (type, extra) => net && net.act(type, extra);
   const top = (right) => `<div class="top"><span class="display">جاسوس</span><span class="muted">${right}</span></div>`;
   const nameOf = (id) => (S.players.find((p) => p.id === id) || {}).name || "ناشناس";
   const av = (n) => `<span class="av">${initial(n)}</span>`;
+  const NOSIG = `<span class="ico nosig" title="آفلاین" aria-label="آفلاین"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 20v-1.5M9 20v-4.5M14 20v-8M19 20V8" opacity=".55"/><path d="M3.5 4.5l17 15"/></svg></span>`;
+  const MICI = `<span class="ico micon" title="میکروفون روشنه" aria-label="میکروفون روشنه"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></span>`;
+  const XI = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
+  const pOf = (id) => S.players.find((p) => p.id === id);
+  const isOn = (id) => { const p = pOf(id); return !!(p && p.online); };
+  // چیپ اسم بازیکن: آفلاین بودن، میکروفون روشن، و دکمه‌ی بیرون کردن برای میزبان
+  function chip(id, { small = false } = {}) {
+    const p = pOf(id) || { id, name: nameOf(id), online: false, mic: false };
+    const host = S.host === S.me.id;
+    return `<li class="chip ${p.id === S.me.id ? "me" : ""} ${p.online ? "" : "off"}" ${small ? 'style="font-size:14px"' : ""}>${av(p.name)}${esc(p.name)}${p.id === S.host ? " <small>میزبان</small>" : ""}${p.online ? "" : NOSIG}${p.mic ? MICI : ""}${host && p.id !== S.me.id ? `<button class="kick" data-do="kick" data-v="${p.id}" aria-label="بیرون کردن ${esc(p.name)}">${XI}</button>` : ""}</li>`;
+  }
+  function inviteLink() {
+    let base = (WEB_URL || location.origin + location.pathname).replace(/\/index\.html$/, "").replace(/\/$/, "");
+    if (!/^https?:\/\//.test(base)) base = "https://" + base;
+    return base + "/?room=" + S.code;
+  }
+  const roundOf = () => `دور ${fa(Math.min(S.played + (S.game.phase === "result" ? 0 : 1), S.rounds))} از ${fa(S.rounds)}`;
 
   function lobby() {
     const isHost = S.host === S.me.id;
@@ -250,26 +363,46 @@ const act = (type, extra) => net && net.act(type, extra);
       <div class="top"><span class="display">جاسوس</span><button class="link" data-do="leave">خروج از اتاق</button></div>
       <button class="ticket" data-do="copy" aria-label="کپی لینک اتاق">
         <p class="t1">کد اتاق</p><p class="display t2">${fa(S.code)}</p>
-        <p class="t3">${copied ? "لینک کپی شد!" : "بزن تا لینک دعوت کپی بشه"}</p>
+        <div class="qr" title="اسکن کن تا بیای تو اتاق">${qrSvg(inviteLink())}</div>
+        <p class="t3">${copied ? "لینک کپی شد!" : "اسکن کن، یا بزن تا لینک کپی بشه"}</p>
       </button>
       <section class="mt8">
         <p class="label">سر میز <span>${enough ? fa(online.length) + " نفر" : "حداقل ۳ نفر لازمه"}</span></p>
-        <ul class="chips">${S.players.map((p) => `<li class="chip ${p.id === S.me.id ? "me" : ""} ${p.online ? "" : "off"}">${av(p.name)}${esc(p.name)}${p.id === S.host ? " <small>میزبان</small>" : ""}</li>`).join("")}</ul>
+        <ul class="chips">${S.players.map((p) => chip(p.id)).join("")}</ul>
       </section>
       <section class="mt8 stack">
         <p class="label" style="margin:0">کلمه‌ها از ${isHost ? "" : "<span>(میزبان انتخاب می‌کنه)</span>"}</p>
         <div class="pills">${cats.map(([k, l]) => `<button class="pill ${st.cat === k ? "on" : ""}" ${isHost ? `data-do="cat" data-v="${k}"` : "disabled"}>${esc(l)}</button>`).join("")}</div>
-        <div class="stepper"><span>زمان هر دور</span><div class="ctl"><button ${isHost && st.minutes < 12 ? "" : "disabled"} data-do="min" data-v="1" aria-label="زیاد کن">+</button><b>${fa(st.minutes)} دقیقه</b><button ${isHost && st.minutes > 2 ? "" : "disabled"} data-do="min" data-v="-1" aria-label="کم کن">−</button></div></div>
+        <label class="stepper"><span>زمان هر دور</span><div class="ctl"><input id="minIn" class="num" data-set="minutes" data-max="${MAX_MINUTES}" inputmode="numeric" autocomplete="off" maxlength="3" value="${fa(st.minutes)}" ${isHost ? "" : "disabled"} aria-label="زمان هر دور به دقیقه" /><b class="unit">دقیقه</b></div></label>
+        <label class="stepper"><span>تعداد دور${S.played ? `<br><small class="muted">${fa(Math.min(S.played, S.rounds))} دور بازی شده</small>` : ""}</span><div class="ctl"><input id="roundIn" class="num" data-set="rounds" data-max="${MAX_ROUNDS}" inputmode="numeric" autocomplete="off" maxlength="2" value="${fa(S.rounds)}" ${isHost ? "" : "disabled"} aria-label="تعداد دور" /><b class="unit">دور</b></div></label>
         <div class="stepper"><span>تعداد جاسوس${st.spyCount === 2 && online.length < 6 ? '<br><small class="muted">دو جاسوس از ۶ نفر به بالا</small>' : ""}</span><div class="ctl"><button ${isHost && st.spyCount < 2 ? "" : "disabled"} data-do="spy" data-v="1" aria-label="زیاد کن">+</button><b>${fa(st.spyCount)}</b><button ${isHost && st.spyCount > 1 ? "" : "disabled"} data-do="spy" data-v="-1" aria-label="کم کن">−</button></div></div>
       </section>
+      ${wordSection(isHost)}
       <div class="mt8">
-        ${isHost ? `<button class="btn red ${enough ? "pulse" : ""}" data-do="start" ${enough ? "" : "disabled"}>شروع دور ${fa(S.game.round + 1)}</button>`
+        ${isHost ? `<button class="btn red ${enough ? "pulse" : ""}" data-do="start" ${enough ? "" : "disabled"}>${S.played >= S.rounds ? "شروع بازی جدید" : `شروع دور ${fa(S.played + 1)} از ${fa(S.rounds)}`}</button>`
                  : `<p class="center muted blink" style="font-size:16px">منتظر میزبان (${esc(nameOf(S.host))}) که دور رو شروع کنه…</p>`}
       </div>
       ${board.length ? `<section class="mt8"><p class="label">امتیازها ${isHost ? '<button class="link" data-do="reset">صفر کن</button>' : ""}</p>
         <div class="stack">${board.map(([id, pts]) => `<div class="score">${av(nameOf(id))}${esc(nameOf(id))}<span class="display">${fa(pts)}</span></div>`).join("")}</div>
         <p class="muted">شهروند برنده: ۱ امتیاز · جاسوس برنده: ۲ امتیاز</p></section>` : ""}
     </div>`;
+  }
+
+  function wordSection(isHost) {
+    const keys = Object.keys(S.categories);
+    const total = keys.reduce((n, k) => n + ((S.custom[k] || []).length), 0);
+    if (!isHost) return total ? `<p class="muted mt4">میزبان ${fa(total)} کلمه‌ی جدید اضافه کرده.</p>` : "";
+    if (!keys.includes(wordCat)) wordCat = S.settings.cat !== "mixed" && keys.includes(S.settings.cat) ? S.settings.cat : keys[0];
+    const mine = S.custom[wordCat] || [];
+    return `<section class="mt8 stack">
+      <p class="label" style="margin:0">اضافه کردن کلمه <span>${total ? fa(total) + " کلمه‌ی خودت" : "به بانک بازی"}</span></p>
+      <form id="wordForm" class="addw" autocomplete="off">
+        <select id="wordCat" class="field" aria-label="دسته">${keys.map((k) => `<option value="${k}" ${k === wordCat ? "selected" : ""}>${esc(S.categories[k])}</option>`).join("")}</select>
+        <input id="wordIn" class="field" maxlength="30" placeholder="کلمه‌ی جدید" aria-label="کلمه‌ی جدید" />
+        <button class="btn lamp" type="submit">اضافه</button>
+      </form>
+      ${mine.length ? `<ul class="chips wchips">${mine.map((w) => `<li class="chip">${esc(w)}<button class="kick" data-do="rmWord" data-v="${esc(w)}" aria-label="حذف ${esc(w)}">${XI}</button></li>`).join("")}</ul>` : ""}
+    </section>`;
   }
 
   function clockText() {
@@ -303,11 +436,11 @@ const act = (type, extra) => net && net.act(type, extra);
     if (guessing && g.amSpy) return wordGrid("کلمه چیه؟", "یه شانس داری. درست بگی می‌بری، غلط بگی شهر می‌بره.");
     const c = clockText();
     const meFirst = g.starter === S.me.id;
-    return `<div class="screen">${top("دور " + fa(g.round))}
+    return `<div class="screen">${top(roundOf())}
       <div class="center" style="margin-bottom:24px"><div id="clk" class="clock ${c.low ? "low" : ""}">${c.text}</div><p class="muted" id="clkNote">${c.over ? "وقت تموم شد. بریم سراغ رأی." : "تا رأی‌گیری"}</p></div>
       ${card()}
       <div class="row mt6">${av(nameOf(g.starter))}<span>اول <b>${meFirst ? "تو" : esc(nameOf(g.starter))}</b> از یکی سؤال ${meFirst ? "کن" : "کنه"}.</span></div>
-      <ul class="chips mt4">${g.roster.map((id) => `<li class="chip" style="font-size:14px">${av(nameOf(id))}${esc(nameOf(id))}</li>`).join("")}</ul>
+      <ul class="chips mt4">${g.roster.map((id) => chip(id, { small: true })).join("")}</ul>
       <div class="grow"></div>
       <div class="stack mt8">
         <button class="btn red ${c.over ? "pulse" : ""}" data-do="toVote">بریم رأی‌گیری</button>
@@ -318,10 +451,10 @@ const act = (type, extra) => net && net.act(type, extra);
 
   function vote() {
     const g = S.game;
-    return `<div class="screen">${top("دور " + fa(g.round))}
+    return `<div class="screen">${top(roundOf())}
       <h2 class="display" style="font-size:48px">جاسوس کیه؟</h2>
       <p class="tag" style="text-align:start;margin-top:4px;font-size:16px">رأی‌ها مخفیه تا همه رأی بدن. تساوی یعنی جاسوس قسر در رفت.</p>
-      <div class="stack mt6">${g.roster.filter((id) => id !== S.me.id).map((id) => `<button class="pick ${g.myVote === id ? "on" : ""}" data-do="vote" data-v="${id}">${av(nameOf(id))}${esc(nameOf(id))}${g.myVote === id ? "<small>رأی تو</small>" : ""}</button>`).join("")}</div>
+      <div class="stack mt6">${g.roster.filter((id) => id !== S.me.id).map((id) => `<button class="pick ${g.myVote === id ? "on" : ""}" data-do="vote" data-v="${id}">${av(nameOf(id))}${esc(nameOf(id))}${isOn(id) ? "" : NOSIG}${g.myVote === id ? "<small>رأی تو</small>" : ""}</button>`).join("")}</div>
       <div class="grow"></div>
       <div class="mt8"><p class="muted" style="display:flex;justify-content:space-between"><span>${g.myVote ? "رأیت ثبت شد. می‌تونی عوضش کنی." : "یکی رو انتخاب کن"}</span><span>${fa(g.votedCount)} از ${fa(g.voterCount)} رأی دادن</span></p>
         <div class="bar"><i style="width:${(g.votedCount / Math.max(1, g.voterCount)) * 100}%"></i></div>
@@ -342,16 +475,25 @@ const act = (type, extra) => net && net.act(type, extra);
     const g = S.game, spyWon = g.outcome === "spy", iWon = spyWon === g.amSpy;
     const why = { tie: "رأی‌ها مساوی شد، کسی بیرون نرفت.", wrong: `شهر اشتباهی ${nameOf(g.accused)} رو گرفت.`,
       early: g.guess ? `${nameOf(g.guess.by)} زد «${g.guess.word}». ${spyWon ? "درست بود." : "غلط بود."}` : "",
-      last: g.guess ? `حدس آخر: «${g.guess.word}». ${spyWon ? "درست بود!" : "غلط بود."}` : "" }[g.reason] || "";
-    return `<div class="screen">${top("دور " + fa(g.round))}
+      last: g.guess ? `حدس آخر: «${g.guess.word}». ${spyWon ? "درست بود!" : "غلط بود."}` : "",
+      kicked: "جاسوس از بازی بیرون شد." }[g.reason] || "";
+    const over = S.played >= S.rounds;
+    const board = Object.entries(S.scores).sort((a, b) => b[1] - a[1]);
+    const best = board.length ? board[0][1] : 0;
+    const champs = board.filter(([, p]) => p === best && p > 0).map(([id]) => id);
+    const final = over ? `<div class="champ mt4"><p class="label" style="margin:0">پایان بازی، ${fa(S.rounds)} دور</p>
+        <p class="display" style="margin:4px 0 12px">${champs.length ? (champs.length > 1 ? "مساوی: " : "قهرمان: ") + champs.map((id) => (id === S.me.id ? "تو" : esc(nameOf(id)))).join(" و ") : "کسی امتیاز نگرفت"}</p>
+        <div class="stack">${board.map(([id, pts]) => `<div class="score ${champs.includes(id) ? "top" : ""}">${av(nameOf(id))}${esc(nameOf(id))}<span class="display">${fa(pts)}</span></div>`).join("")}</div></div>` : "";
+    return `<div class="screen">${top(roundOf())}
       <div class="center" style="padding:24px 0;display:flex;flex-direction:column;align-items:center">
         <div class="verdict ${spyWon ? "v-spy" : "v-town"}"><span class="display">${spyWon ? "جاسوس برد" : "جاسوس گیر افتاد"}</span></div>
         <p style="font-size:18px;font-weight:700;margin-top:20px">${iWon ? "تو بردی." : "تو باختی."} <span style="font-weight:400;color:var(--soft)">${esc(why)}</span></p></div>
       <div class="box center" style="background:var(--lamp);color:var(--ink)"><p style="margin:0;font-weight:700;opacity:.7">کلمه بود</p><p class="display" style="font-size:48px">${esc(g.word)}</p></div>
       <div class="box mt4" style="background:var(--night)"><p class="label">${g.spies.length > 1 ? "جاسوس‌ها" : "جاسوس"}</p>
         <div class="stack">${g.spies.map((id) => `<div style="display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px">${av(nameOf(id))}${id === S.me.id ? "خودت" : esc(nameOf(id))}</div>`).join("")}</div></div>
+      ${final}
       <div class="grow"></div>
-      <div class="mt8"><button class="btn lamp" data-do="lobby">برگرد سر میز</button></div></div>`;
+      <div class="mt8"><button class="btn lamp" data-do="lobby">${over ? "برگرد سر میز (بازی جدید)" : "برگرد سر میز، دور بعد"}</button></div></div>`;
   }
 
   function spectator() {
@@ -377,8 +519,12 @@ const act = (type, extra) => net && net.act(type, extra);
     // انیمیشن ورود فقط وقتی صفحه عوض می‌شه
     const key = session ? (S && !S.game.loading ? S.game.phase + S.game.inRound + guessing : "load") : "gate";
     const keepInputs = !session && document.getElementById("name");
-    if (keepInputs && lastKey === key && !notice) { document.querySelector(".err").textContent = gateErr; return; }
+    if (keepInputs && lastKey === key && !notice) { document.querySelector(".err").textContent = gateErr; renderDock(); return; }
+    const ae = document.activeElement;
+    const keep = ae && ae.id && ae.tagName === "INPUT" && $app.contains(ae) ? { id: ae.id, v: ae.value, a: ae.selectionStart, b: ae.selectionEnd } : null;
     $app.innerHTML = html;
+    if (keep) { const el = document.getElementById(keep.id); if (el && !el.disabled) { el.value = keep.v; el.focus(); try { el.setSelectionRange(keep.a, keep.b); } catch {} } }
+    renderDock();
     if (lastKey === key) { const sc = $app.querySelector(".screen"); if (sc) sc.style.animation = "none"; }
     lastKey = key;
     bind();
@@ -408,6 +554,34 @@ const act = (type, extra) => net && net.act(type, extra);
       card.addEventListener("pointerdown", open);
       card.addEventListener("contextmenu", (e) => e.preventDefault());
       card.addEventListener("keydown", (e) => (e.key === " " || e.key === "Enter") && open(e));
+    }
+    document.querySelectorAll("input.num[data-set]").forEach((inp) => {
+      const commit = () => {
+        const key = inp.dataset.set, max = Number(inp.dataset.max), cur = key === "rounds" ? S.rounds : S.settings[key];
+        const n = toNum(inp.value);
+        if (!Number.isInteger(n) || n < 1) { inp.value = fa(cur); return flash("یه عدد بزرگ‌تر از صفر بنویس"); }
+        const v = Math.min(max, n);
+        inp.value = fa(v);
+        if (v !== cur) act("settings", { [key]: v });
+        if (n > max) flash(`حداکثر ${fa(max)}`);
+      };
+      inp.addEventListener("input", () => { const t = inp.value.replace(/[0-9]/g, (d) => FA[d]).replace(/[^۰-۹٠-٩]/g, ""); if (t !== inp.value) inp.value = t; });
+      inp.addEventListener("change", commit);
+      inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); inp.blur(); } });
+      inp.addEventListener("focus", () => inp.select());
+    });
+    const wf = document.getElementById("wordForm");
+    if (wf) {
+      document.getElementById("wordCat").addEventListener("change", (e) => { wordCat = e.target.value; render(); });
+      wf.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const inp = document.getElementById("wordIn"), w = inp.value.trim();
+        if (!w) return inp.focus();
+        act("addWord", { cat: wordCat, word: w });
+        inp.value = "";
+        flash(`«${w}» به ${S.categories[wordCat]} اضافه شد`);
+        setTimeout(() => { const i = document.getElementById("wordIn"); if (i) i.focus(); }, 0);
+      });
     }
     const code = document.getElementById("code");
     if (code) code.addEventListener("input", () => { const v = toLatin(code.value); code.value = fa(v); gateErr = ""; document.querySelector(".err").textContent = ""; });
@@ -451,14 +625,22 @@ const act = (type, extra) => net && net.act(type, extra);
     }
     else if (d === "leave") {
       leaving = true;
+      resetRoomUi();
       await net.leave();
       leaving = false;
       save(null); S = null; lastSig = ""; prevPhase = "";
       history.replaceState(null, "", location.pathname);
       render();
     }
-    else if (d === "cat") act("settings", { cat: v });
-    else if (d === "min") act("settings", { minutes: S.settings.minutes + Number(v) });
+    else if (d === "cat") { if (v !== "mixed") wordCat = v; act("settings", { cat: v }); }
+    else if (d === "kick") {
+      if (confirm(`${nameOf(v)} رو از اتاق بیرون کنم؟ دیگه نمی‌تونه برگرده.`)) act("kick", { target: v });
+    }
+    else if (d === "rmWord") act("removeWord", { cat: wordCat, word: v });
+    else if (d === "chat") { chatOpen = !chatOpen; renderDock(); if (chatOpen) { renderChat(true); setTimeout(() => { const i = document.getElementById("chatIn"); if (i && matchMedia("(pointer:fine)").matches) i.focus(); }, 50); } }
+    else if (d === "closeChat") { chatOpen = false; renderDock(); }
+    else if (d === "rq") randomQuestion();
+    else if (d === "mic" || d === "spk") toggleVoice(d);
     else if (d === "spy") act("settings", { spyCount: S.settings.spyCount + Number(v) });
     else if (d === "start") act("start");
     else if (d === "reset") act("resetScores");
@@ -471,6 +653,101 @@ const act = (type, extra) => net && net.act(type, extra);
     else if (d === "cancel" || d === "lobby") act("lobby");
   });
 
+  /* ---------- داک پایین: چت و صدا ---------- */
+
+  const $dock = document.getElementById("dock");
+  const IC = {
+    mic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>',
+    micOff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 9.5V6a3 3 0 0 0-5.7-1.3M9 9v2a3 3 0 0 0 4.6 2.5M18.5 11a6.5 6.5 0 0 1-1 3.4M5.5 11a6.5 6.5 0 0 0 10.2 5.4M12 17.5V21M3.5 3.5l17 17"/></svg>',
+    hp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3.5" y="14" width="4.5" height="7" rx="2"/><rect x="16" y="14" width="4.5" height="7" rx="2"/></svg>',
+    hpOff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 15v-3a8 8 0 0 1 12.4-6.7M19.4 9.4A8 8 0 0 1 20 12v3"/><rect x="3.5" y="14" width="4.5" height="7" rx="2"/><path d="M16 17.5V21h2.5a2 2 0 0 0 2-2v-2.5M3.5 3.5l17 17"/></svg>',
+    chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M4 5.5h16v11H10l-4.5 3.5v-3.5H4z"/><path d="M8 10h8M8 13h5" stroke-linecap="round"/></svg>',
+    send: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M20 4L3.5 11l6.5 2.5L12.5 20z"/><path d="M10 13.5L20 4" stroke-linecap="round"/></svg>',
+    dice: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1.3" fill="currentColor"/><circle cx="15" cy="15" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="9" r="1.3" fill="currentColor"/><circle cx="9" cy="15" r="1.3" fill="currentColor"/></svg>',
+  };
+
+  function renderDock() {
+    const inRoom = !!(session && S && !S.game.loading);
+    document.body.classList.toggle("inroom", inRoom);
+    if (!inRoom) { $dock.innerHTML = ""; return; }
+    if (!document.getElementById("sheet")) {
+      $dock.innerHTML = `<section class="sheet" id="sheet" aria-label="چت اتاق">
+          <div class="sheet-h"><span class="display">چت اتاق</span><button class="link" data-do="closeChat">بستن</button></div>
+          <div class="msgs" id="msgs"></div>
+          <div class="composer">
+            <form id="chatForm" autocomplete="off"><input id="chatIn" class="field" maxlength="300" placeholder="بپرس یا جواب بده…" aria-label="پیام" /><button class="send" type="submit" aria-label="فرستادن">${IC.send}</button></form>
+            <button class="btn qbtn" data-do="rq">${IC.dice} سؤال رندوم</button>
+          </div>
+        </section>
+        <nav class="dockbar" id="dockBar"></nav>`;
+      document.getElementById("chatForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const inp = document.getElementById("chatIn"), t = inp.value.trim();
+        if (!t || !net) return;
+        inp.value = "";
+        net.sendChat({ text: t }).catch((err) => flash(friendly(err)));
+      });
+      renderChat(true);
+    }
+    const unread = unreadCount();
+    const mic = !!(voice && voice.mic), spk = !!(voice && voice.speaker), n = voice ? voice.connectedCount() : 0;
+    document.getElementById("sheet").classList.toggle("open", chatOpen);
+    document.getElementById("dockBar").innerHTML = `
+      <button class="dk mic ${mic ? "on" : ""}" data-do="mic" aria-pressed="${mic}">${mic ? '<i class="live"></i>' : ""}${mic ? IC.mic : IC.micOff}<span>${mic ? "میکروفون روشن" : "میکروفون"}</span></button>
+      <button class="dk chatb ${chatOpen ? "open" : ""}" data-do="chat" aria-expanded="${chatOpen}">${IC.chat}<span>${chatOpen ? "بستن چت" : "چت"}</span>${unread && !chatOpen ? `<b class="badge">${fa(Math.min(unread, 99))}</b>` : ""}</button>
+      <button class="dk ${spk ? "on" : ""}" data-do="spk" aria-pressed="${spk}">${spk ? '<i class="live"></i>' : ""}${spk ? IC.hp : IC.hpOff}<span>${spk ? (n ? `هدفون (${fa(n)} نفر)` : "هدفون روشن") : "هدفون"}</span></button>`;
+  }
+
+  const chatList = () => (net && net.state.chat) || [];
+  function unreadCount() {
+    return chatList().filter((m) => m.at > seenAt && m.by !== uid).length;
+  }
+
+  function renderChat(force) {
+    const box = document.getElementById("msgs");
+    const list = chatList();
+    if (chatOpen && list.length) seenAt = Math.max(seenAt, list[list.length - 1].at || 0);
+    if (!box) return;
+    const near = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+    box.innerHTML = list.length ? list.map((m) => {
+      if (m.kind === "q") {
+        const forMe = m.target === uid;
+        return `<div class="msg q ${forMe ? "forme" : ""}"><span class="qh">${IC.dice} سؤال از <b>${forMe ? "تو" : esc(m.tname)}</b></span><p>${esc(m.text)}</p><small>${m.by === uid ? "تو" : esc(m.name)} پرسید</small></div>`;
+      }
+      return `<div class="msg ${m.by === uid ? "me" : ""}"><small>${esc(m.name)}</small><p>${esc(m.text)}</p></div>`;
+    }).join("") : `<p class="empty">هنوز کسی چیزی نگفته. یه سؤال بپرس، یا «سؤال رندوم» رو بزن.</p>`;
+    if (force || near || (list.length && list[list.length - 1].by === uid)) box.scrollTop = box.scrollHeight;
+    if (!force) renderDock();
+  }
+
+  // سؤال رندوم: یه نفر از بازیکن‌ها (غیر از خودت) و یه سؤال مربوط به دسته‌ی این دور
+  function randomQuestion() {
+    if (!S || !net) return;
+    const g = S.game;
+    const ids = (g.inRound && g.phase !== "lobby" ? g.roster : S.players.map((p) => p.id)).filter((id) => id !== S.me.id && isOn(id));
+    if (!ids.length) return flash("کسی آنلاین نیست که ازش سؤال بپرسی");
+    tQueue = tQueue.filter((id) => ids.includes(id));
+    if (!tQueue.length) tQueue = ids.slice().sort(() => Math.random() - 0.5);
+    const target = tQueue.shift();
+    const cat = g.inRound && QUESTIONS[g.cat] ? g.cat : "general";
+    if (!qQueue[cat] || !qQueue[cat].length) qQueue[cat] = QUESTIONS[cat].slice().sort(() => Math.random() - 0.5);
+    const text = qQueue[cat].shift();
+    net.sendChat({ kind: "q", text, target, tname: nameOf(target) }).catch((err) => flash(friendly(err)));
+  }
+
+  async function toggleVoice(kind) {
+    if (!net || !S) return;
+    if (!voice) voice = createVoice(fb, uid, S.code, net, { onChange: renderDock });
+    try {
+      if (kind === "mic") await voice.setMic(!voice.mic);
+      else await voice.setSpeaker(!voice.speaker);
+    } catch (e) {
+      const n = (e && e.name) || "";
+      flash(n === "NotAllowedError" || n === "SecurityError" ? "اجازه‌ی میکروفون داده نشد. از تنظیمات مرورگر یا اپ اجازه بده." : n === "NotFoundError" ? "میکروفونی پیدا نشد." : friendly(e));
+    }
+    renderDock();
+  }
+
   document.addEventListener("visibilitychange", () => { if (!document.hidden && net) { net.beat(); net.tick(); } });
 
   setInterval(() => {
@@ -479,6 +756,8 @@ const act = (type, extra) => net && net.act(type, extra);
     const c = clockText(); el.textContent = c.text; el.classList.toggle("low", c.low);
     const n = document.getElementById("clkNote"); if (n) n.textContent = c.over ? "وقت تموم شد. بریم سراغ رأی." : "تا رأی‌گیری";
   }, 500);
+
+  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
   (async function boot() {
     render();

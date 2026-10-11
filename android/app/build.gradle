@@ -1,0 +1,44 @@
+plugins {
+    id 'com.android.application'
+}
+
+// ← آدرس سایت بازی رو فقط همین‌جا عوض کن (با / آخر)
+def SITE_URL = "https://soheilezz.github.io/spy-online/"
+
+android {
+    namespace 'com.soheil.jasoos'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.soheil.jasoos"
+        minSdk 24
+        targetSdk 34
+        // هر بار که GitHub می‌سازه، نسخه یکی بالا می‌ره تا آپدیت روی نسخه‌ی قبلی نصب بشه
+        versionCode((System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger())
+        versionName "2.0." + (System.getenv("GITHUB_RUN_NUMBER") ?: "0")
+        resValue "string", "site_url", SITE_URL
+        manifestPlaceholders = [siteHost: new URI(SITE_URL).host]
+    }
+
+    signingConfigs {
+        release {
+            storeFile file('jasoos.jks')
+            storePassword 'jasoos-bazi-1405'
+            keyAlias 'jasoos'
+            keyPassword 'jasoos-bazi-1405'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+        encoding 'UTF-8'
+    }
+}

@@ -11,4 +11,11 @@ export const firebaseConfig = {
 // آدرس سایت بازی برای لینک دعوت (وقتی روی GitHub Pages گذاشتی اینجا بنویس).
 // مثال: "https://soheilezz.github.io/spy-online"
 // داخل اپ اندروید این لازمه، چون آدرس خود اپ قابل دعوت نیست.
-export const WEB_URL = "soheil.github.io/spy-online";
+export const WEB_URL = "https://soheilezz.github.io/spy-online";
+
+// سرورهای اتصال صدا. STUN گوگل رایگانه و برای بیشتر وای‌فای‌ها کافیه.
+// اگه روی اینترنت موبایل صدا وصل نشد، یه سرور TURN (مثلاً از metered.ca که پلن رایگان داره) اینجا اضافه کن:
+// { urls: "turn:آدرس:3478", username: "...", credential: "..." }
+export const ICE_SERVERS = [
+  { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
+];

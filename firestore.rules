@@ -26,11 +26,33 @@ service cloud.firestore {
 
       match /players/{uid} {
         allow read: if signedIn();
-        allow create, update: if signedIn() && request.auth.uid == uid
+        // کسی که میزبان بیرونش کرده دیگه نمی‌تونه برگرده
+        allow create: if signedIn() && request.auth.uid == uid
           && exists(roomPath(code))
+          && !(uid in get(roomPath(code)).data.get('kicked', []))
           && request.resource.data.name is string
           && request.resource.data.name.size() <= 20;
-        allow delete: if signedIn() && request.auth.uid == uid;
+        allow update: if signedIn() && request.auth.uid == uid
+          && request.resource.data.name is string
+          && request.resource.data.name.size() <= 20;
+        // خود بازیکن می‌ره، یا میزبان بیرونش می‌کنه
+        allow delete: if signedIn() && (request.auth.uid == uid || isHost(code));
+      }
+
+      // چت اتاق: فقط اعضای اتاق می‌خونن و می‌نویسن
+      match /chat/{id} {
+        allow read: if isMember(code);
+        allow create: if isMember(code)
+          && request.resource.data.by == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 300;
+      }
+
+      // سیگنال‌های اتصال صدا (WebRTC): هر کس فقط پیام‌های خودش رو می‌خونه
+      match /rtc/{id} {
+        allow create: if isMember(code) && request.resource.data.from == request.auth.uid;
+        allow read, delete: if signedIn() && resource.data.to == request.auth.uid;
       }
 
       // کلمه‌ی هر بازیکن: فقط خودش می‌خونه، فقط میزبان می‌نویسه
