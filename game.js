@@ -29,7 +29,8 @@ const shuffle = (a) => {
 export const newRoom = (code, host) => ({
   code,
   host,
-  settings: { cat: "places", minutes: 5, spyCount: 1, rounds: 5 },
+  settings: { cat: "places", minutes: 5, spyCount: 1, rounds: 5, elim: false },
+  usedCats: [], // دسته‌هایی که توی حالت «حذفی» بازی شدن (تا تموم شدن بقیه‌ی دسته‌ها)
   scores: {},
   played: 0, // چند دور از این بازی تموم شده
   custom: {}, // کلمه‌هایی که میزبان اضافه کرده: { cat: [word] }
@@ -94,6 +95,7 @@ export function applyAction(room, priv, a, env) {
       if (Number.isInteger(a.minutes)) s.minutes = Math.min(MAX_MINUTES, Math.max(1, a.minutes));
       if (Number.isInteger(a.rounds)) s.rounds = Math.min(MAX_ROUNDS, Math.max(1, a.rounds));
       if (Number.isInteger(a.spyCount)) s.spyCount = Math.min(2, Math.max(1, a.spyCount));
+      if (typeof a.elim === "boolean" && a.elim !== !!s.elim) { s.elim = a.elim; room.usedCats = []; }
       room.settings = s;
       return {};
     }
@@ -103,7 +105,17 @@ export function applyAction(room, priv, a, env) {
       const kicked = room.kicked || [];
       const roster = shuffle(env.onlineIds.filter((id) => !kicked.includes(id)));
       if (roster.length < MIN_PLAYERS) return { error: "حداقل ۳ نفر" };
-      const cat = room.settings.cat === "mixed" ? pick(CATEGORY_KEYS) : room.settings.cat;
+      // حالت حذفی: دسته‌ای که بازی شده تا وقتی بقیه هم بازی نشدن انتخاب نمی‌شه
+      const elim = !!room.settings.elim;
+      let used = elim ? (room.usedCats || []).filter((k) => CATEGORY_KEYS.includes(k)) : [];
+      if (used.length >= CATEGORY_KEYS.length) used = [];
+      let cat = room.settings.cat;
+      if (cat === "mixed") cat = pick(CATEGORY_KEYS.filter((k) => !used.includes(k)));
+      else if (elim && used.includes(cat)) return { error: "این دسته قبلاً بازی شده. یه دسته‌ی دیگه یا رندوم رو انتخاب کن" };
+      if (elim) {
+        used = [...used, cat];
+        room.usedCats = used.length >= CATEGORY_KEYS.length ? [] : used; // همه بازی شدن؟ از نو
+      }
       const spyN = roster.length >= 6 ? room.settings.spyCount : 1;
       const word = pick(wordsOf(room, cat));
       // بازی قبلی تموم شده؟ از نو

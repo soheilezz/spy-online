@@ -59,6 +59,16 @@
   .pills { display: flex; flex-wrap: wrap; gap: 8px; }
   .pill { border: 0; border-radius: 999px; padding: 8px 16px; font: 700 16px Vazirmatn, sans-serif; background: var(--night); color: var(--soft); cursor: pointer; }
   .pill.on { background: var(--text); color: var(--ink); } .pill:disabled { cursor: default; }
+  .pill.used { opacity: .35; text-decoration: line-through; }
+  .elim { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--night); border-radius: 16px; padding: 12px 16px; }
+  .elim b { display: block; font-weight: 700; } .elim small { display: block; font-size: 13px; line-height: 1.6; }
+  .tog { flex: none; position: relative; width: 52px; height: 30px; border: 0; border-radius: 999px; background: var(--chip); cursor: pointer; padding: 0; }
+  .tog i { position: absolute; top: 3px; right: 3px; width: 24px; height: 24px; border-radius: 50%; background: var(--soft); transition: transform .2s; }
+  .tog.on { background: var(--teal); } .tog.on i { transform: translateX(-22px); background: #fff; } .tog:disabled { cursor: default; opacity: .7; }
+  .credit { margin-top: 32px; text-align: center; font-size: 14px; color: var(--muted); }
+  .credit p { margin: 0 0 8px; } .credit b { color: var(--soft); }
+  .ig { display: inline-flex; align-items: center; gap: 8px; color: var(--text); text-decoration: none; font-weight: 700; padding: 8px 16px; border-radius: 999px; background: var(--night); }
+  .ig:hover { background: var(--chip); } .ig span { direction: ltr; unicode-bidi: isolate; }
   .stepper { display: flex; justify-content: space-between; align-items: center; background: var(--night); border-radius: 16px; padding: 12px 16px; font-weight: 700; }
   .stepper .ctl { display: flex; align-items: center; gap: 12px; }
   .stepper button { width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--chip); color: var(--text); font-size: 20px; cursor: pointer; }
@@ -280,6 +290,7 @@ function buildS() {
     rounds: totalRounds(r),
     played: r.played || 0,
     custom: r.custom || {},
+    usedCats: r.usedCats || [],
     game: {
       phase: r.phase, round: r.round, roster: r.roster, starter: r.starter, endsAt,
       cat: inRound ? r.cat : "", word, amSpy, inRound,
@@ -328,6 +339,13 @@ const act = (type, extra) => net && net.act(type, extra);
         <button class="btn lamp" type="submit">ورود به اتاق</button>
       </form>
       <p class="err" role="alert">${esc(gateErr)}</p>
+      <div class="credit">
+        <p>ساخته‌شده توسط <b dir="ltr">soheil ezzati</b></p>
+        <a class="ig" href="https://www.instagram.com/soheil_ezzati/" target="_blank" rel="noopener" aria-label="اینستاگرام soheil_ezzati">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="url(#igGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><linearGradient id="igGrad" x1="0" y1="24" x2="24" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#feda75"/><stop offset=".35" stop-color="#fa7e1e"/><stop offset=".65" stop-color="#d62976"/><stop offset="1" stop-color="#962fbf"/></linearGradient></defs><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><path d="M17.5 6.5h.01"/></svg>
+          <span>@soheil_ezzati</span>
+        </a>
+      </div>
     </div>`;
   }
 
@@ -357,7 +375,9 @@ const act = (type, extra) => net && net.act(type, extra);
     const online = S.players.filter((p) => p.online);
     const enough = online.length >= 3;
     const st = S.settings;
-    const cats = [...Object.entries(S.categories), ["mixed", "قاطی"]];
+    const cats = [...Object.entries(S.categories), ["mixed", "رندوم 🎲"]];
+    const elim = !!st.elim, usedCats = elim ? S.usedCats : [];
+    const catBlocked = elim && st.cat !== "mixed" && usedCats.includes(st.cat);
     const board = Object.entries(S.scores).filter(([id]) => S.players.some((p) => p.id === id)).sort((a, b) => b[1] - a[1]);
     return `<div class="screen">
       <div class="top"><span class="display">جاسوس</span><button class="link" data-do="leave">خروج از اتاق</button></div>
@@ -372,14 +392,16 @@ const act = (type, extra) => net && net.act(type, extra);
       </section>
       <section class="mt8 stack">
         <p class="label" style="margin:0">کلمه‌ها از ${isHost ? "" : "<span>(میزبان انتخاب می‌کنه)</span>"}</p>
-        <div class="pills">${cats.map(([k, l]) => `<button class="pill ${st.cat === k ? "on" : ""}" ${isHost ? `data-do="cat" data-v="${k}"` : "disabled"}>${esc(l)}</button>`).join("")}</div>
+        <div class="pills">${cats.map(([k, l]) => { const used = usedCats.includes(k); return `<button class="pill ${st.cat === k ? "on" : ""} ${used ? "used" : ""}" ${isHost && !used ? `data-do="cat" data-v="${k}"` : "disabled"}>${esc(l)}</button>`; }).join("")}</div>
+        <div class="elim"><div><b>حذفی</b><small class="muted">${elim ? `دسته‌ی بازی‌شده تا تموم شدن بقیه نمیاد (${fa(usedCats.length)} از ${fa(Object.keys(S.categories).length)})` : "هر دسته فقط یه بار تا وقتی بقیه بازی بشن"}</small></div><button class="tog ${elim ? "on" : ""}" ${isHost ? 'data-do="elim"' : "disabled"} role="switch" aria-checked="${elim}" aria-label="حالت حذفی"><i></i></button></div>
+        ${catBlocked ? '<p class="muted center" style="margin:0">این دسته بازی شده. یه دسته‌ی دیگه یا رندوم رو بزن.</p>' : ""}
         <label class="stepper"><span>زمان هر دور</span><div class="ctl"><input id="minIn" class="num" data-set="minutes" data-max="${MAX_MINUTES}" inputmode="numeric" autocomplete="off" maxlength="3" value="${fa(st.minutes)}" ${isHost ? "" : "disabled"} aria-label="زمان هر دور به دقیقه" /><b class="unit">دقیقه</b></div></label>
         <label class="stepper"><span>تعداد دور${S.played ? `<br><small class="muted">${fa(Math.min(S.played, S.rounds))} دور بازی شده</small>` : ""}</span><div class="ctl"><input id="roundIn" class="num" data-set="rounds" data-max="${MAX_ROUNDS}" inputmode="numeric" autocomplete="off" maxlength="2" value="${fa(S.rounds)}" ${isHost ? "" : "disabled"} aria-label="تعداد دور" /><b class="unit">دور</b></div></label>
         <div class="stepper"><span>تعداد جاسوس${st.spyCount === 2 && online.length < 6 ? '<br><small class="muted">دو جاسوس از ۶ نفر به بالا</small>' : ""}</span><div class="ctl"><button ${isHost && st.spyCount < 2 ? "" : "disabled"} data-do="spy" data-v="1" aria-label="زیاد کن">+</button><b>${fa(st.spyCount)}</b><button ${isHost && st.spyCount > 1 ? "" : "disabled"} data-do="spy" data-v="-1" aria-label="کم کن">−</button></div></div>
       </section>
       ${wordSection(isHost)}
       <div class="mt8">
-        ${isHost ? `<button class="btn red ${enough ? "pulse" : ""}" data-do="start" ${enough ? "" : "disabled"}>${S.played >= S.rounds ? "شروع بازی جدید" : `شروع دور ${fa(S.played + 1)} از ${fa(S.rounds)}`}</button>`
+        ${isHost ? `<button class="btn red ${enough ? "pulse" : ""}" data-do="start" ${enough && !catBlocked ? "" : "disabled"}>${S.played >= S.rounds ? "شروع بازی جدید" : `شروع دور ${fa(S.played + 1)} از ${fa(S.rounds)}`}</button>`
                  : `<p class="center muted blink" style="font-size:16px">منتظر میزبان (${esc(nameOf(S.host))}) که دور رو شروع کنه…</p>`}
       </div>
       ${board.length ? `<section class="mt8"><p class="label">امتیازها ${isHost ? '<button class="link" data-do="reset">صفر کن</button>' : ""}</p>
@@ -633,6 +655,7 @@ const act = (type, extra) => net && net.act(type, extra);
       render();
     }
     else if (d === "cat") { if (v !== "mixed") wordCat = v; act("settings", { cat: v }); }
+    else if (d === "elim") act("settings", { elim: !S.settings.elim });
     else if (d === "kick") {
       if (confirm(`${nameOf(v)} رو از اتاق بیرون کنم؟ دیگه نمی‌تونه برگرده.`)) act("kick", { target: v });
     }
